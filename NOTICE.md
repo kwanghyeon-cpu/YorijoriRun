@@ -34,3 +34,11 @@ The water bottle pickup and stamina HUD icon ("water-bottle", generated into `Ga
 `web/js/icons.js` by `tools/gen-icons.mjs`) is from Material Symbols by Google
 (https://github.com/google/material-design-icons), used under the Apache License 2.0
 (https://www.apache.org/licenses/LICENSE-2.0).
+
+
+## Black Han Sans — title logo lettering
+
+The "요리조리 런" title logo (`title_logo.png`, drawn by `design/title-icon/logo.html`) is lettered in
+Black Han Sans by Zess Type (https://fonts.google.com/specimen/Black+Han+Sans), used under the
+SIL Open Font License 1.1 (https://openfontlicense.org). The font itself is not bundled with the app;
+only the rendered logo image is.

@@ -18,6 +18,11 @@ http.createServer((q, r) => {
     return;
   }
   if (url.pathname === '/shots.html') { r.setHeader('content-type', 'text/html'); return r.end(fs.readFileSync(path.join(here, 'shots.html'))); }
+  // The logo drawing page (design/title-icon/logo.html) saves through the same /save endpoint.
+  if (url.pathname === '/design/title-icon/logo.html') {
+    r.setHeader('content-type', 'text/html');
+    return r.end(fs.readFileSync(path.resolve(here, '..', '..', 'design', 'title-icon', 'logo.html')));
+  }
   const p = decodeURIComponent(url.pathname);
   if (!p.startsWith('/web/')) { r.statusCode = 404; return r.end('nf'); }
   const f = path.join(webRoot, p.slice(5));

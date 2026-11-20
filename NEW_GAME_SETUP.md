@@ -46,7 +46,8 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 | `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·배달 카트·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
 | `traffic_rear_*.png` (움직이는 장애물 4칸) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 | 교체함 |
 | `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘 | 교체함 |
-| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 |
+| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 (2026-11-20 두 번째: 배달 카트, 차선 없는 길) |
+| `title_logo.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | "요리조리 런" 로고, 지그재그 화살표가 "런"으로 들어가는 C3 시안 (`design/title-icon/logo.html`) | 새로 넣음 |
 | `ic_launcher_foreground.png`, `design/icon/store_icon_512.png` | 요리조리 피하는 러너 아이콘 (배경 층은 보라색 그라데이션 그대로) | 교체함 |
 | `city_*.png` | 길 건너편 도시 | 그대로 씀 |
 | 효과음 7개 (`res/raw`, `web/assets/sfx`, `web/assets/bgm`) | `design/sounds/synth-sounds.cjs`로 직접 합성한 칩튠 소리(라이선스 필요 없음) | 교체함 |

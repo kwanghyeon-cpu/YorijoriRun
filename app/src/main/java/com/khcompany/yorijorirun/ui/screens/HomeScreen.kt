@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -26,7 +27,6 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.khcompany.yorijorirun.R
@@ -35,13 +35,13 @@ import com.khcompany.yorijorirun.R
 private val PillBackground = Color(0xFF120B22).copy(alpha = 0.62f)
 
 /**
- * Portrait title screen: the logo and the PLAY button sit in the sky and far path of the scene,
- * so the four riders in the lower half of the picture stay in view (same layout as the web build).
+ * Portrait title screen: the logo sits in the sky, a compact PLAY button sits at the bottom on the
+ * near path, and the four riders in between stay in view (same layout as the web build).
  */
 @Composable
 fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Anchored toward the top (the riders sit ~60-82% down, so they survive the crop even on
+        // Anchored toward the top (the riders sit ~50-85% down, so they survive the crop even on
         // 16:9 screens) to keep the skyline behind the logo.
         Image(
             painter = painterResource(R.drawable.home_portrait),
@@ -70,18 +70,18 @@ fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
+                .navigationBarsPadding()
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.weight(0.10f))
-            Text(
-                text = "요리조리\n런",
-                style = MaterialTheme.typography.headlineLarge.copy(shadow = textShadow),
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                fontSize = 72.sp,
-                lineHeight = 74.sp,
-                fontWeight = FontWeight.Black,
+            // The designed logo (design/title-icon/logo.html, concept C3); the description keeps the
+            // title readable for screen readers.
+            Image(
+                painter = painterResource(R.drawable.title_logo),
+                contentDescription = "요리조리 런",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 text = "도시 산책로를 달리는 레트로 러너",
@@ -92,36 +92,38 @@ fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
                     .background(PillBackground, RoundedCornerShape(50))
                     .padding(horizontal = 16.dp, vertical = 6.dp),
             )
-            // PLAY follows the subtitle directly; the free space goes below it, over the riders.
-            Spacer(modifier = Modifier.height(24.dp))
+            // BEST stays up under the subtitle, so nothing but PLAY covers the riders.
             if (highScore > 0) {
                 Text(
                     text = "BEST  $highScore",
                     style = MaterialTheme.typography.titleLarge.copy(shadow = textShadow),
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier
-                        .padding(bottom = 20.dp)
+                        .padding(top = 12.dp)
                         .background(PillBackground, RoundedCornerShape(16.dp))
                         .padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
+            // The free space goes here, over the riders; a smaller PLAY sits at the bottom, on the
+            // near path below their feet.
+            Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = onPlay,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(32.dp),
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(64.dp),
+                    .fillMaxWidth(0.5f)
+                    .height(52.dp),
             ) {
                 Text(
                     text = "PLAY",
                     style = MaterialTheme.typography.labelLarge,
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
-            Spacer(modifier = Modifier.weight(0.82f))
+            Spacer(modifier = Modifier.height(36.dp))
         }
     }
 }
