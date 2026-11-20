@@ -143,19 +143,21 @@ function skylineScroll(strips, screenWidth) {
 
 /**
  * Kinds of obstacle ahead. Vehicles move with traffic (wider/taller ones slower); cones and
- * barriers stand still on the road (speed 0, so they rush at you at your own speed). halfWidth is
- * the collision half-width in road half-widths; drawHalfWidth only sizes the sprite, so the art can
- * change without changing the game. heightFactor (height / width) matches the sprite.
+ * barriers stand still on the road (speed 0, so they rush at you at your own speed). Every kind
+ * collides with the same half-width (HW.OBSTACLE_HALF_WIDTH): obstacles always sit on a lane
+ * center, so the width only matters while the player is between lanes, and it should not depend
+ * on the picture. drawHalfWidth sizes the sprite (road half-widths); heightFactor (height / width)
+ * matches the sprite.
  * 요리조리 런 art: SEDAN = cyclist, SUV = dog walker, BUS = running crew, TRUCK = delivery scooter,
  * CONE = traffic cone, BARRIER = pothole (the names stay from Lane Dash).
  */
 const TRAFFIC_KINDS = {
-  SEDAN: { name: 'SEDAN', halfWidth: 0.14, drawHalfWidth: 0.12, heightFactor: 2.46, minSpeed: 9, maxSpeed: 13, sprite: 'assets/rear/traffic_rear_sedan.png', color: '#8D99AE' },
-  SUV: { name: 'SUV', halfWidth: 0.15, drawHalfWidth: 0.22, heightFactor: 1.24, minSpeed: 8.5, maxSpeed: 12.5, sprite: 'assets/rear/traffic_rear_suv.png', color: '#5C6478' },
-  BUS: { name: 'BUS', halfWidth: 0.19, drawHalfWidth: 0.24, heightFactor: 1.02, minSpeed: 7, maxSpeed: 10.5, sprite: 'assets/rear/traffic_rear_bus.png', color: '#A7AFBF' },
-  TRUCK: { name: 'TRUCK', halfWidth: 0.18, drawHalfWidth: 0.18, heightFactor: 1.62, minSpeed: 6, maxSpeed: 9.5, sprite: 'assets/rear/traffic_rear_truck.png', color: '#7F8CA8' },
-  CONE: { name: 'CONE', halfWidth: 0.09, drawHalfWidth: 0.09, heightFactor: 1.2, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_cone.png', color: '#FF7A1A' },
-  BARRIER: { name: 'BARRIER', halfWidth: 0.17, drawHalfWidth: 0.17, heightFactor: 0.43, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_barrier.png', color: '#FFE03A' },
+  SEDAN: { name: 'SEDAN', drawHalfWidth: 0.12, heightFactor: 2.46, minSpeed: 9, maxSpeed: 13, sprite: 'assets/rear/traffic_rear_sedan.png', color: '#8D99AE' },
+  SUV: { name: 'SUV', drawHalfWidth: 0.22, heightFactor: 1.24, minSpeed: 8.5, maxSpeed: 12.5, sprite: 'assets/rear/traffic_rear_suv.png', color: '#5C6478' },
+  BUS: { name: 'BUS', drawHalfWidth: 0.24, heightFactor: 1.02, minSpeed: 7, maxSpeed: 10.5, sprite: 'assets/rear/traffic_rear_bus.png', color: '#A7AFBF' },
+  TRUCK: { name: 'TRUCK', drawHalfWidth: 0.18, heightFactor: 1.62, minSpeed: 6, maxSpeed: 9.5, sprite: 'assets/rear/traffic_rear_truck.png', color: '#7F8CA8' },
+  CONE: { name: 'CONE', drawHalfWidth: 0.09, heightFactor: 1.2, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_cone.png', color: '#FF7A1A' },
+  BARRIER: { name: 'BARRIER', drawHalfWidth: 0.17, heightFactor: 0.43, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_barrier.png', color: '#FFE03A' },
 };
 
 const HW = {
@@ -170,9 +172,16 @@ const HW = {
   LANE_DAMPING: 31,
   LATERAL_STEP: 1 / 120,
   CENTRIFUGAL: 40,
-  /** Player's drawn width and its (slightly smaller) hitbox half-width, in road half-widths. */
-  PLAYER_DRAW_WIDTH: 0.28,
+  /**
+   * Every ride is drawn PLAYER_DRAW_HEIGHT tall (road half-widths), so a jogger and a cart read at
+   * the same size; a wide sprite is capped at PLAYER_DRAW_MAX_WIDTH so it stays inside its lane.
+   * The hitbox is the same for every ride.
+   */
+  PLAYER_DRAW_HEIGHT: 0.62,
+  PLAYER_DRAW_MAX_WIDTH: 0.38,
   PLAYER_HALF_WIDTH: 0.125,
+  /** Collision half-width shared by every obstacle kind (see TRAFFIC_KINDS). */
+  OBSTACLE_HALF_WIDTH: 0.15,
   COLLISION_DEPTH: 0.45,
   REMOVE_BEHIND: 4,
   SCORE_PER_UNIT: 2.4,
@@ -377,7 +386,7 @@ class HighwayEngine {
       car.z += car.speed * dt;
       const relative = car.z - playerZ;
       const lateral = Math.abs(car.lx - this.playerX);
-      if (Math.abs(relative) < HW.COLLISION_DEPTH && lateral < HW.PLAYER_HALF_WIDTH + car.kind.halfWidth) {
+      if (Math.abs(relative) < HW.COLLISION_DEPTH && lateral < HW.PLAYER_HALF_WIDTH + HW.OBSTACLE_HALF_WIDTH) {
         if (this.shieldTimeLeft > 0) {
           // The shield smashes through: the obstacle is gone, the run goes on.
           this.onSfx('SHIELD_HIT');
@@ -390,7 +399,7 @@ class HighwayEngine {
       }
       if (!car.passed && relative < -HW.COLLISION_DEPTH) {
         car.passed = true;
-        if (lateral < HW.PLAYER_HALF_WIDTH + car.kind.halfWidth + HW.NEAR_MISS_MARGIN) {
+        if (lateral < HW.PLAYER_HALF_WIDTH + HW.OBSTACLE_HALF_WIDTH + HW.NEAR_MISS_MARGIN) {
           this.bonusScore += HW.NEAR_MISS_SCORE;
           this.fuel = Math.min(HW.MAX_FUEL, this.fuel + HW.NEAR_MISS_FUEL);
           this.nearMissCount++;

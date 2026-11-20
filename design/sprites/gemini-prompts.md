@@ -20,7 +20,7 @@ Lane Dash의 차 그림을 요리조리 런 그림으로 바꾸기 위한 프롬
 |---|---|---|---|
 | `car_rear_1.png` | 내 탈것: 조깅 | 384px | 선택 화면 1번 |
 | `car_rear_2.png` | 내 탈것: 자전거 | 384px | 2번 |
-| `car_rear_3.png` | 내 탈것: 리어카 | 384px | 3번 |
+| `car_rear_3.png` | 내 탈것: 배달 전동 카트 (예전 리어카) | 384px | 3번. 세로로 긴 그림이어야 다른 탈것과 같은 높이로 보여요 |
 | `car_rear_4.png` | 내 탈것: 킥보드 | 384px | 4번 |
 | `traffic_rear_sedan.png` | 움직이는 장애물: 자전거 탄 사람 | 332px | 가장 자주 나옴 |
 | `traffic_rear_suv.png` | 움직이는 장애물: 강아지 산책 | 332px | 자주 나옴 |
@@ -75,11 +75,18 @@ SUBJECT: a cheerful young runner jogging away from the camera, seen from directl
 SUBJECT: a cyclist riding a city bicycle away from the camera, seen from directly behind: rider in a bright red helmet and sky-blue jersey, sitting upright, both hands on the handlebar. The rear wheel is centered and drawn as a thin upright ellipse, with a small red rear reflector under the saddle and a rear rack. The handlebar ends stick out slightly on both sides.
 ```
 
-### `car_rear_3` — 내 탈것: 리어카
+### `car_rear_3` — 내 탈것: 배달 전동 카트
+
+리어카는 가로로 넓고 낮은 그림이라, 모든 탈것을 같은 높이로 그리면 차선 폭 한도에 걸려 혼자 작아 보였습니다.
+그래서 서서 타는 키 큰 배달 카트로 바꿉니다. 동네에서 음료를 배달하는 전동 카트 느낌이지만,
+**특정 회사의 카트 모양·색 배합·로고는 따라 하지 않고** 일반적인 모양으로 그립니다.
+결과는 **세로가 가로보다 1.8배 이상 긴** 그림이어야 다른 탈것과 크기가 맞습니다.
 
 ```text
-SUBJECT: a person pulling a traditional wooden two-wheeled hand cart (Korean "rear-car" street cart) away from the camera, seen from directly behind the cart: the cart's open back and two large spoked wooden-and-metal wheels on both sides fill most of the width, the cart is loaded with a neat pile of fresh vegetables, fruit boxes and a watermelon. The puller is visible above the load from behind: red cap, sky-blue shirt, hands holding the two long handles in front.
+SUBJECT: a cheerful delivery rider driving a small stand-up electric delivery cart away from the camera, seen from directly behind. The rider stands upright on a low platform at the back of the cart, holding a T-shaped handlebar in front: bright red cap, sky-blue jacket, dark pants, white sneakers — the rider's back is the center of the picture. In front of the rider (so it shows above and slightly beside the rider's shoulders) is a tall, narrow, rounded insulated cooler box in plain cream white with one thin pale-green stripe, no text, no logo. Small wheels at the bottom corners, a small round red tail light under the platform. The whole sprite is TALL AND NARROW: about twice as tall as it is wide, no wider than the rider's shoulders plus a little.
 ```
+
+이 그림을 바꾸면 게임 속 이름("리어카")도 함께 바꿉니다(`Model.kt`의 `displayName`, 웹 `catalog.js`의 `name`).
 
 ### `car_rear_4` — 내 탈것: 킥보드
 

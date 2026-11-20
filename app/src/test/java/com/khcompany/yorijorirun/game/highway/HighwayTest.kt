@@ -175,7 +175,7 @@ class HighwayEngineTest {
 
     @Test
     fun passingCloseToACarEarnsANearMissBonus() {
-        addTraffic(lx = 0.3f, relativeZ = 1f) // not touching (0.265), but inside the near-miss margin
+        addTraffic(lx = 0.3f, relativeZ = 1f) // not touching (0.275), but inside the near-miss margin
         val car = engine.traffic.last()
         tickUntilPassed(car)
         assertEquals(GameStatus.RUNNING, engine.status)
@@ -369,9 +369,11 @@ class HighwayEngineTest {
     @Test
     fun fiveLanesAndEveryCarFitsItsLane() {
         assertEquals(5, HW_LANE_CENTERS.size)
-        val widest = TrafficKind.entries.maxOf { it.halfWidth }
-        assertTrue("an adjacent-lane car never touches", HighwayEngine.PLAYER_HALF_WIDTH + widest < HW_LANE_SPACING)
-        assertTrue("a drawn car fits inside a lane", HighwayEngine.PLAYER_DRAW_WIDTH < HW_LANE_SPACING)
+        assertTrue(
+            "an adjacent-lane obstacle never touches",
+            HighwayEngine.PLAYER_HALF_WIDTH + HighwayEngine.OBSTACLE_HALF_WIDTH < HW_LANE_SPACING,
+        )
+        assertTrue("a drawn ride fits inside a lane", HighwayEngine.PLAYER_DRAW_MAX_WIDTH < HW_LANE_SPACING)
     }
 
     @Test

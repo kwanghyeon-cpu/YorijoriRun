@@ -17,26 +17,26 @@ import kotlin.random.Random
 /**
  * Kinds of obstacle ahead. Vehicles move with traffic (wider/taller ones slower); cones and
  * barriers stand still on the road (speed 0, so they rush at you at your own speed).
- * [halfWidth] is the collision half-width in road half-widths; [drawHalfWidth] only sizes the
- * sprite, so the art can change without changing the game. [heightFactor] (height / width) matches
- * the sprite named [spriteName]. A lane is [HW_LANE_SPACING] wide, so these stay well inside one.
+ * Every kind collides with the same half-width ([HighwayEngine.OBSTACLE_HALF_WIDTH]): obstacles
+ * always sit on a lane center, so the width only matters while the player is between lanes, and it
+ * should not depend on the picture. [drawHalfWidth] sizes the sprite (road half-widths);
+ * [heightFactor] (height / width) matches the sprite named [spriteName].
  * 요리조리 런 art: SEDAN = cyclist, SUV = dog walker, BUS = running crew, TRUCK = delivery scooter,
  * CONE = traffic cone, BARRIER = pothole (the names stay from Lane Dash).
  */
 enum class TrafficKind(
-    val halfWidth: Float,
     val drawHalfWidth: Float,
     val heightFactor: Float,
     val minSpeed: Float,
     val maxSpeed: Float,
     val spriteName: String,
 ) {
-    SEDAN(0.14f, 0.12f, 2.46f, 9f, 13f, "traffic_rear_sedan"),
-    SUV(0.15f, 0.22f, 1.24f, 8.5f, 12.5f, "traffic_rear_suv"),
-    BUS(0.19f, 0.24f, 1.02f, 7f, 10.5f, "traffic_rear_bus"),
-    TRUCK(0.18f, 0.18f, 1.62f, 6f, 9.5f, "traffic_rear_truck"),
-    CONE(0.09f, 0.09f, 1.2f, 0f, 0f, "hw_cone"),
-    BARRIER(0.17f, 0.17f, 0.43f, 0f, 0f, "hw_barrier"),
+    SEDAN(0.12f, 2.46f, 9f, 13f, "traffic_rear_sedan"),
+    SUV(0.22f, 1.24f, 8.5f, 12.5f, "traffic_rear_suv"),
+    BUS(0.24f, 1.02f, 7f, 10.5f, "traffic_rear_bus"),
+    TRUCK(0.18f, 1.62f, 6f, 9.5f, "traffic_rear_truck"),
+    CONE(0.09f, 1.2f, 0f, 0f, "hw_cone"),
+    BARRIER(0.17f, 0.43f, 0f, 0f, "hw_barrier"),
 }
 
 class TrafficCar(
@@ -269,7 +269,7 @@ class HighwayEngine(
             car.z += car.speed * dt
             val relative = car.z - playerZ
             val lateral = abs(car.lx - playerX)
-            if (abs(relative) < COLLISION_DEPTH && lateral < PLAYER_HALF_WIDTH + car.kind.halfWidth) {
+            if (abs(relative) < COLLISION_DEPTH && lateral < PLAYER_HALF_WIDTH + OBSTACLE_HALF_WIDTH) {
                 if (shieldTimeLeft > 0f) {
                     // The shield smashes through: the obstacle is gone, the run goes on.
                     onSfx(SfxEvent.SHIELD_HIT)
@@ -282,7 +282,7 @@ class HighwayEngine(
             }
             if (!car.passed && relative < -COLLISION_DEPTH) {
                 car.passed = true
-                if (lateral < PLAYER_HALF_WIDTH + car.kind.halfWidth + NEAR_MISS_MARGIN) {
+                if (lateral < PLAYER_HALF_WIDTH + OBSTACLE_HALF_WIDTH + NEAR_MISS_MARGIN) {
                     bonusScore += NEAR_MISS_SCORE
                     fuel = (fuel + NEAR_MISS_FUEL).coerceAtMost(MAX_FUEL)
                     nearMissCount++
@@ -488,9 +488,17 @@ class HighwayEngine(
         const val LATERAL_STEP = 1f / 120f
         const val CENTRIFUGAL = 40f
 
-        /** Player's drawn width and its (slightly smaller) hitbox half-width, in road half-widths. */
-        const val PLAYER_DRAW_WIDTH = 0.28f
+        /**
+         * Every ride is drawn PLAYER_DRAW_HEIGHT tall (road half-widths), so a jogger and a cart
+         * read at the same size; a wide sprite is capped at PLAYER_DRAW_MAX_WIDTH so it stays
+         * inside its lane. The hitbox is the same for every ride.
+         */
+        const val PLAYER_DRAW_HEIGHT = 0.62f
+        const val PLAYER_DRAW_MAX_WIDTH = 0.38f
         const val PLAYER_HALF_WIDTH = 0.125f
+
+        /** Collision half-width shared by every obstacle kind (see [TrafficKind]). */
+        const val OBSTACLE_HALF_WIDTH = 0.15f
         const val COLLISION_DEPTH = 0.45f
         const val REMOVE_BEHIND = 4f
         const val SCORE_PER_UNIT = 2.4f

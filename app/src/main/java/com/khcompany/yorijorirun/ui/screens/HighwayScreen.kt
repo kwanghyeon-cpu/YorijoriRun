@@ -358,9 +358,14 @@ fun HighwayScreen(
             // The road is fixed at the bottom of the screen: the car moves across it.
             val playerHalf = roadHalfWidth(HW_PLAYER_T, w)
             val playerCx = strips.centerXAt(playerY, h, rowH) + engine.playerX * playerHalf
-            val playerWidth = HighwayEngine.PLAYER_DRAW_WIDTH * playerHalf * car.drawScale
+            // Every ride is drawn the same height; a wide sprite is capped to its lane and keeps its shape.
             val sprite = playerSprite
-            val playerHeight = if (sprite != null) playerWidth * sprite.height / sprite.width else playerWidth * 0.8f
+            val playerAspect = if (sprite != null) sprite.height.toFloat() / sprite.width else 0.8f
+            val playerWidth = minOf(
+                HighwayEngine.PLAYER_DRAW_HEIGHT / playerAspect,
+                HighwayEngine.PLAYER_DRAW_MAX_WIDTH,
+            ) * playerHalf
+            val playerHeight = playerWidth * playerAspect
             if (sprite != null) {
                 drawRearSprite(
                     sprite,

@@ -37,8 +37,8 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 남은 계정 작업과 교체할 그림 목록은 `NEW_GAME_SETUP.md`.
 - 그림(탈것 4종, 장애물, 타이틀 화면, 앱 아이콘)과 소리 7개는 모두 새것으로 교체함. Lane Dash에서 온 것은 도시 배경 그림뿐이다.
 - 홈 화면은 앱·웹 모두 로고와 PLAY 버튼을 위쪽에 두고, 아래쪽은 타이틀 그림의 네 탈것이 보이게 비워 둔다.
-- 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 `drawHalfWidth`, 충돌은 `halfWidth`로 따로 정한다.
-- 내 탈것도 그림 크기만 `CarOption.drawScale`(웹 `CARS[].drawScale`)로 따로 키울 수 있다. 지금은 리어카만 1.5. 충돌은 모든 탈것이 `PLAYER_HALF_WIDTH`로 같다.
+- 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 종류별 `drawHalfWidth`, 충돌 폭은 모든 장애물이 `OBSTACLE_HALF_WIDTH`(0.15) 하나다. 장애물은 늘 차선 한가운데 있어서 폭은 차선을 옮기는 중에만 의미가 있고, 그림과 상관없게 했다.
+- 내 탈것은 모두 같은 높이 `PLAYER_DRAW_HEIGHT`(0.62)로 그리고, 가로로 넓은 그림은 폭이 `PLAYER_DRAW_MAX_WIDTH`(0.38, 한 차선 안)에서 멈춘다(비율 유지). 충돌은 모든 탈것이 `PLAYER_HALF_WIDTH`로 같다. 3번 탈것(리어카)은 넓은 그림이라 작게 보여서, 세로로 긴 배달 전동 카트로 다시 그리기로 했다(`design/sprites/gemini-prompts.md`).
 - 길에는 차선 점선을 그리지 않는다(산책로라서). 5칸은 게임 규칙에만 있다.
 - GitHub 원격 저장소 없음(로컬 git만).
 - 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

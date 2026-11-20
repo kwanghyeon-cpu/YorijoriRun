@@ -36,8 +36,7 @@ const CITIES = [
 const CARS = [
   { id: 'jogging', name: '조깅', nameEn: 'JOGGING', rearSprite: 'assets/rear/car_rear_1.png' },
   { id: 'bicycle', name: '자전거', nameEn: 'BICYCLE', rearSprite: 'assets/rear/car_rear_2.png' },
-  // drawScale only widens the picture (collisions are the same for every ride); mirrors CarOption.drawScale.
-  { id: 'cart', name: '리어카', nameEn: 'CART', rearSprite: 'assets/rear/car_rear_3.png', drawScale: 1.5 },
+  { id: 'cart', name: '리어카', nameEn: 'CART', rearSprite: 'assets/rear/car_rear_3.png' },
   { id: 'kickboard', name: '킥보드', nameEn: 'KICKBOARD', rearSprite: 'assets/rear/car_rear_4.png' },
 ];
 

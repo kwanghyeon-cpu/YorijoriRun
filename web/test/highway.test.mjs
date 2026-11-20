@@ -268,7 +268,7 @@ test('restart resets the run', () => {
 });
 
 test('passing close to a car earns a near-miss bonus', () => {
-  const car = addTraffic(0.3, 1); // not touching (0.265), but inside the near-miss margin
+  const car = addTraffic(0.3, 1); // not touching (0.275), but inside the near-miss margin
   tickUntilPassed(car);
   assert.equal(engine.status, 'RUNNING');
   assert.equal(engine.score, Math.floor(engine.z * HW.SCORE_PER_UNIT) + HW.NEAR_MISS_SCORE);
@@ -368,9 +368,8 @@ test('traffic is spawned fairly: never a wall nobody could dodge', () => {
 
 test('five lanes, and every car fits its lane', () => {
   assert.equal(HW_LANE_CENTERS.length, 5);
-  const widest = Math.max(...Object.values(TRAFFIC_KINDS).map((k) => k.halfWidth));
-  assert.ok(HW.PLAYER_HALF_WIDTH + widest < HW_LANE_SPACING, 'an adjacent-lane car never touches');
-  assert.ok(HW.PLAYER_DRAW_WIDTH < HW_LANE_SPACING, 'a drawn car fits inside a lane');
+  assert.ok(HW.PLAYER_HALF_WIDTH + HW.OBSTACLE_HALF_WIDTH < HW_LANE_SPACING, 'an adjacent-lane obstacle never touches');
+  assert.ok(HW.PLAYER_DRAW_MAX_WIDTH < HW_LANE_SPACING, 'a drawn ride fits inside a lane');
 });
 
 test('the top speed climbs with the run', () => {

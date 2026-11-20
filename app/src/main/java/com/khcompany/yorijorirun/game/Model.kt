@@ -36,12 +36,6 @@ data class CarOption(
     val roofColor: Color,
     /** Behind-the-car sprite (drawable name, no extension); empty falls back to a placeholder drawing. */
     val rearSpriteName: String = "",
-    /**
-     * Draws the sprite this much wider than [HighwayEngine.PLAYER_DRAW_WIDTH]. Only the picture:
-     * collisions use PLAYER_HALF_WIDTH for every ride. The cart is a wide, short sprite and would
-     * look tiny next to the tall riders. Mirrors `drawScale` in the web catalog.js.
-     */
-    val drawScale: Float = 1f,
 )
 
 object GameCatalog {
@@ -113,7 +107,6 @@ object GameCatalog {
             bodyColor = Color(0xFF3D8BFF),
             roofColor = Color(0xFF1A2340),
             rearSpriteName = "car_rear_3",
-            drawScale = 1.5f,
         ),
         CarOption(
             id = "kickboard",

@@ -273,9 +273,11 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   const playerY = horizonY + roadH * HW_PLAYER_T;
   const playerHalf = roadHalfWidth(HW_PLAYER_T, w);
   const playerCx = hwStrips.centerXAt(playerY, h, rowH) + engine.playerX * playerHalf;
-  const playerWidth = HW.PLAYER_DRAW_WIDTH * playerHalf * (car.drawScale || 1);
+  // Every ride is drawn the same height; a wide sprite is capped to its lane and keeps its shape.
   const playerImg = images[car.rearSprite];
-  const playerHeight = playerImg && playerImg.naturalWidth ? playerWidth * playerImg.naturalHeight / playerImg.naturalWidth : playerWidth * 0.8;
+  const playerAspect = playerImg && playerImg.naturalWidth ? playerImg.naturalHeight / playerImg.naturalWidth : 0.8;
+  const playerWidth = Math.min(HW.PLAYER_DRAW_HEIGHT / playerAspect, HW.PLAYER_DRAW_MAX_WIDTH) * playerHalf;
+  const playerHeight = playerWidth * playerAspect;
   drawHighwayRearSprite(
     ctx, playerImg, playerCx, playerY, playerWidth,
     engine.steerLean * HW_MAX_LEAN_DEGREES * Math.PI / 180, '#E63946',
