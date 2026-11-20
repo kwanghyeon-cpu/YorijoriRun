@@ -22,7 +22,7 @@ const DESTS = dry
 const SPRITES = {
   car_rear_1: 384, // 조깅
   car_rear_2: 384, // 자전거
-  car_rear_3: 384, // 리어카
+  car_rear_3: 384, // 배달 카트
   car_rear_4: 384, // 킥보드
   traffic_rear_sedan: 332, // 자전거 탄 사람
   traffic_rear_suv: 332, // 강아지 산책

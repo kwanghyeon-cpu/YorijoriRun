@@ -102,8 +102,8 @@ object GameCatalog {
         ),
         CarOption(
             id = "cart",
-            displayName = "리어카",
-            englishName = "CART",
+            displayName = "배달 카트",
+            englishName = "DELIVERY CART",
             bodyColor = Color(0xFF3D8BFF),
             roofColor = Color(0xFF1A2340),
             rearSpriteName = "car_rear_3",

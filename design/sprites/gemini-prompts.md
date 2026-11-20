@@ -86,7 +86,7 @@ SUBJECT: a cyclist riding a city bicycle away from the camera, seen from directl
 SUBJECT: a cheerful delivery rider driving a small stand-up electric delivery cart away from the camera, seen from directly behind. The rider stands upright on a low platform at the back of the cart, holding a T-shaped handlebar in front: bright red cap, sky-blue jacket, dark pants, white sneakers — the rider's back is the center of the picture. In front of the rider (so it shows above and slightly beside the rider's shoulders) is a tall, narrow, rounded insulated cooler box in plain cream white with one thin pale-green stripe, no text, no logo. Small wheels at the bottom corners, a small round red tail light under the platform. The whole sprite is TALL AND NARROW: about twice as tall as it is wide, no wider than the rider's shoulders plus a little.
 ```
 
-이 그림을 바꾸면 게임 속 이름("리어카")도 함께 바꿉니다(`Model.kt`의 `displayName`, 웹 `catalog.js`의 `name`).
+2026-11-20에 이 그림으로 바꾸고 게임 속 이름도 "배달 카트"로 바꿨습니다(`Model.kt`의 `displayName`, 웹 `catalog.js`의 `name`).
 
 ### `car_rear_4` — 내 탈것: 킥보드
 

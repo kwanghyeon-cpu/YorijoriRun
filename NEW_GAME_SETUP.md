@@ -43,7 +43,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 
 | 파일 | 내용 | 상태 |
 |---|---|---|
-| `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·리어카·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
+| `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·배달 카트·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
 | `traffic_rear_*.png` (움직이는 장애물 4칸) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 | 교체함 |
 | `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘 | 교체함 |
 | `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 |
@@ -61,6 +61,6 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
   `SOUND_VERSION`을 올립니다. 무료 사이트 소리로 바꾸려면 `design/sounds/README.md`(고르기 가이드)와 `make-sounds.cjs`를 씁니다.
 
 코드 쪽 남은 일: 없음(그림·소리 교체도 끝남).
-(문구 정리·속도계도 끝남. 탈것 이름은 조깅·자전거·리어카·킥보드, 속도계는 15~25 km/h, 게임오버는 "부딪혔어요".)
+(문구 정리·속도계도 끝남. 탈것 이름은 조깅·자전거·배달 카트(처음엔 리어카)·킥보드, 속도계는 15~25 km/h, 게임오버는 "부딪혔어요".)
 (도로 → 산책로는 끝남. 도시별 길 색: 서울 적갈색 우레탄, 도쿄 남색, 뉴욕 회청색, 파리 모래색. 연석은 회색 경계석, 가로등은 낮은 공원 등. 차선 점선은 없앴다(5칸 이동은 게임 규칙에만 있음).)
 (연료 → 체력(생수병)은 끝남. 화면 문구·아이콘·게이지만 바꿨고 엔진 이름 `fuel`은 그대로다. `sfx_fuel_low` 경고음도 새 "삐삐" 소리로 바꿨다.)
