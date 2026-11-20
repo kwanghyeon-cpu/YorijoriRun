@@ -15,7 +15,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 ## 이 프로젝트에서 지켜야 할 것
 
 - **Lane Dash의 계정 ID를 절대 다시 쓰지 않는다.** AdMob은 지금 Google 샘플 ID, 실제 ID는 이 게임 전용으로 새로 받는다.
-- `app/google-services.json`은 빌드용 임시 파일(로컬 전용, gitignore). Firebase에 이 앱을 등록하면 교체.
+- `app/google-services.json`은 yorijori-run 프로젝트의 진짜 파일이지만 로컬 전용이다(gitignore, 저장소에 올리지 않음).
 - 스토어에 올리기 전에 이름을 다시 바꿀 일이 생기면 `node tools/rename-project.cjs YorijoriRun <New> "요리조리 런" "<New Name>"` 한 번으로 패키지·클래스·표시 이름·저장 키·순위표 컬렉션을 바꾼다. 패키지명은 스토어에 올린 뒤에는 못 바꾼다.
 - 사람·아기가 다치는 표현은 피한다(사람 장애물은 "피하는" 표현, 부딪히면 "부딪혔어요" 정도로).
 - 아이콘은 Iconify에서 가져오고 세트별 라이선스를 확인한다(전역 지침).
@@ -41,5 +41,5 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 종류별 `drawHalfWidth`, 충돌 폭은 모든 장애물이 `OBSTACLE_HALF_WIDTH`(0.15) 하나다. 장애물은 늘 차선 한가운데 있어서 폭은 차선을 옮기는 중에만 의미가 있고, 그림과 상관없게 했다.
 - 내 탈것은 모두 같은 높이 `PLAYER_DRAW_HEIGHT`(0.62)로 그리고, 가로로 넓은 그림은 폭이 `PLAYER_DRAW_MAX_WIDTH`(0.38, 한 차선 안)에서 멈춘다(비율 유지). 충돌은 모든 탈것이 `PLAYER_HALF_WIDTH`로 같다. 3번 탈것은 처음에 리어카였는데 넓은 그림이라 작게 보여서, 세로로 긴 배달 전동 카트("배달 카트", id는 `cart` 그대로)로 바꿨다.
 - 길에는 차선 점선을 그리지 않는다(산책로라서). 5칸은 게임 규칙에만 있다.
-- GitHub 원격 저장소 없음(로컬 git만).
+- GitHub 공개 저장소 `kwanghyeon-cpu/YorijoriRun`(2026-11-20, origin). GitHub Pages가 master 루트를 배포한다: 웹 게임 https://kwanghyeon-cpu.github.io/YorijoriRun/web/ , 개인정보처리방침 https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy . master에 합친 뒤 푸시하면 바로 반영되니, 웹 파일을 바꾸면 `?v=` 캐시 번호를 꼭 올린다. Firebase는 이 게임 전용 새 프로젝트 `yorijori-run`이다(Lane Dash와 분리). 앱은 `app/google-services.json`(로컬 전용), 웹은 `web/js/leaderboard.js`의 설정(공개돼도 되는 값)을 쓴다. 규칙은 `firestore.rules`를 콘솔에 붙여 넣어 게시한다.
 - 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

@@ -2,17 +2,16 @@
 // and Leaderboard.kt (same "scores_yorijorirun" collection, same field names, same qualifying rule),
 // so a score set from the web build lands in the same shared leaderboard as the Android app.
 //
-// This needs a Web app registered in the same Firebase project (lanedash-2cc5d) — the
-// Android app's own config (google-services.json) is Android-only and can't be reused
-// here. Get one at https://console.firebase.google.com -> Project settings -> your apps ->
-// Add app -> Web, then fill in the values below from the snippet it gives you.
+// The Web app registered in the game's own Firebase project (yorijori-run, separate from Lane
+// Dash). These values are public by design — every web page that uses Firebase ships them;
+// the leaderboard is protected by firestore.rules, not by hiding this config.
 const FIREBASE_CONFIG = {
-  apiKey: 'REPLACE_ME',
-  authDomain: 'lanedash-2cc5d.firebaseapp.com',
-  projectId: 'lanedash-2cc5d',
-  storageBucket: 'lanedash-2cc5d.firebasestorage.app',
-  messagingSenderId: '67067239684',
-  appId: 'REPLACE_ME',
+  apiKey: 'AIzaSyD1lOvE8bhC-Bs6Yq2Dqyss-9h_-LpvbbM',
+  authDomain: 'yorijori-run.firebaseapp.com',
+  projectId: 'yorijori-run',
+  storageBucket: 'yorijori-run.firebasestorage.app',
+  messagingSenderId: '992177570584',
+  appId: '1:992177570584:web:77dd6428e721287a9b146d',
 };
 
 firebase.initializeApp(FIREBASE_CONFIG);

@@ -81,7 +81,7 @@ Play Console의 **스토어 등록정보** 화면에 그대로 붙여 넣을 수
 ## 연락처·개인정보
 
 - 개인정보처리방침: `privacy-policy.md` 내용을 인터넷 주소로 올려야 합니다(예: GitHub Pages).
-  지금은 `https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy`처럼 될 것으로 가정하지만, 저장소를 만든 뒤 실제 주소로 넣어 주세요.
+  주소: https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy (GitHub Pages, 2026-11-20 공개).
 - 이메일: 방침의 문의처와 같은 주소를 쓰면 됩니다.
 
 ## 콘텐츠 등급 설문 참고

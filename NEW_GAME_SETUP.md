@@ -20,11 +20,12 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 - **웹 저장 키**: `yorijori_run_*` (같은 github.io 도메인에서 Lane Dash 기록과 섞이지 않음)
 
 ## 직접 해 주셔야 하는 것 (계정 작업)
-1. **Firebase**: 프로젝트 콘솔에서 Android 앱 `com.khcompany.yorijorirun`를 등록하고 `google-services.json`을 받아 `app/`에 넣기.
-   지금 `app/google-services.json`은 빌드만 되게 만든 **임시 파일**입니다(로컬 전용, 커밋 안 됨).
-   같은 Firebase 프로젝트(lanedash-2cc5d)를 쓰셔도 되고 새 프로젝트를 만드셔도 됩니다.
-2. **Firestore 규칙**: `firestore.rules`의 `scores_yorijorirun` 블록을 콘솔 규칙에 추가해 게시하기.
-   같은 Firebase 프로젝트를 쓰신다면 Lane Dash의 기존 블록(`scores`, `scores_highway`)은 **지우지 말고 함께 두세요.**
+1. **Firebase** (끝남, 2026-11-20): 새 프로젝트 `yorijori-run`(Lane Dash 프로젝트 lanedash-2cc5d와 분리). Android 앱과 웹 앱을 등록했고,
+   진짜 `google-services.json`(로컬 전용)과 웹 설정(`web/js/leaderboard.js`)을 넣었습니다. 순서 기록:
+   - 프로젝트 추가(Google 애널리틱스 끔) → Android 앱 `com.khcompany.yorijorirun` 등록 → `google-services.json`을 받아 `app/`에 넣기.
+     지금 `app/google-services.json`은 빌드만 되게 만든 **임시 파일**입니다(로컬 전용, 커밋 안 됨, 안에는 Lane Dash 프로젝트 정보).
+   - 웹 앱도 등록(호스팅 체크 안 함)하고 `firebaseConfig` 값으로 `web/js/leaderboard.js`의 설정을 바꾸기.
+2. **Firestore** (끝남, 2026-11-20, 규칙 게시 확인: 순위표 읽기 성공, 잘못된 기록과 다른 컬렉션은 거부): 데이터베이스 만들기(프로덕션 모드, 위치 asia-northeast3 서울 추천) → 규칙 탭에 `firestore.rules` 전체를 붙여 넣고 게시.
    게시 전까지는 이 게임의 순위표가 "권한 없음"으로 실패합니다(의도된 안전장치).
 3. **AdMob**: 새 앱 등록 → 앱 ID(`~`)와 전면·보상형 광고 단위 ID(`/`)를 받아서 위 두 파일의 샘플 ID 교체.
    `app-ads.txt`는 개발자 사이트에 이미 있으면 그대로 됩니다.
@@ -34,8 +35,9 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
    피처 그래픽(1024×500)은 `design/icon/feature_graphic.png`(`node design/title-icon/make-feature-graphic.cjs`).
    개인 개발자 계정은 새 앱마다 비공개 테스트 요건이 있을 수 있으니 콘솔에서 확인.
 5. **서명**: 릴리스 서명은 `keystore.properties`(커밋 안 됨)로 합니다. Lane Dash의 업로드 키를 재사용해도 되고 새로 만들어도 됩니다.
-6. **GitHub / 웹**: 새 저장소를 만들어 푸시하고 Pages를 켜면 공유 링크(`WEB_PLAY_URL`)가 살아납니다.
-   지금은 `https://kwanghyeon-cpu.github.io/YorijoriRun/web/`로 가정해 두었습니다.
+6. **GitHub / 웹** (끝남, 2026-11-20): 공개 저장소 https://github.com/kwanghyeon-cpu/YorijoriRun 에 master를 올리고 Pages를 켰습니다.
+   웹 게임 https://kwanghyeon-cpu.github.io/YorijoriRun/web/ (앱 공유 문구의 `WEB_PLAY_URL`), 개인정보처리방침 https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy .
+   웹 순위표는 Firebase에 **웹 앱도 등록**해서 `web/js/leaderboard.js`의 `REPLACE_ME`(apiKey, appId 등)를 채워야 동작합니다.
 
 ## 교체할 그림·소리
 
