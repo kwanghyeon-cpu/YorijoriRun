@@ -5,7 +5,7 @@ Lane Dash(하이웨이 3.0.5)를 복제해서 만든 새 프로젝트입니다. 
 
 ## 이름 (2026-11-20 확정)
 이름은 **요리조리 런**(코드 이름 `YorijoriRun`, 패키지 `com.khcompany.yorijorirun`)으로 정했습니다.
-Path Dash는 임시 이름이었고, 프로젝트 폴더 이름(`D:\Dev\PathDash`)만 그대로입니다.
+Path Dash는 임시 이름이었습니다. 프로젝트 폴더는 `C:\Users\innocean\AndroidStudioProjects\YorijoriRun`입니다.
 패키지명은 스토어에 올린 뒤에는 바꿀 수 없습니다. 올리기 전에 이름을 또 바꾼다면 아래 한 줄이면 됩니다.
 
 ```

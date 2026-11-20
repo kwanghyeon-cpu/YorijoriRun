@@ -1,6 +1,6 @@
 # 요리조리 런
 
-이름은 2026-11-20에 **요리조리 런**(코드 `YorijoriRun`, 패키지 `com.khcompany.yorijorirun`)으로 정했다. 임시 이름이던 Path Dash는 프로젝트 폴더 이름(`D:\Dev\PathDash`)에만 남아 있다.
+이름은 2026-11-20에 **요리조리 런**(코드 `YorijoriRun`, 패키지 `com.khcompany.yorijorirun`)으로 정했다. 임시 이름은 Path Dash였다. 프로젝트 폴더는 `C:\Users\innocean\AndroidStudioProjects\YorijoriRun`(2026-11-20에 `D:\Dev\PathDash`에서 옮김).
 
 Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 운영 중인 앱)를 복제해 만든 **새 게임**. 게임 방식은 그대로 두고, 조종 대상을 자동차에서 조깅·자전거·리어카·킥보드 4종(앱 id `jogging`/`bicycle`/`cart`/`kickboard`)으로, 무대를 도로에서 산책로·자전거길 느낌의 "길"로 바꾸는 것이 목표다.
 
