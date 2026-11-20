@@ -9,7 +9,7 @@ Lane Dash의 차 그림을 Path Dash 그림으로 바꾸기 위한 프롬프트�
 | 사실 | 프롬프트에 어떻게 반영했나 |
 |---|---|
 | 카메라가 **바로 뒤에서** 봅니다. 모든 그림은 정면 뒷모습이고 좌우 대칭에 가깝습니다. | `straight-on rear view, eye level, no perspective tilt` |
-| 그림의 **가로 폭은 코드가 정하고**, 세로는 그림 비율을 따릅니다. 아래 끝이 바닥에 닿습니다. | 대상이 그림 폭을 꽉 채우고, 아래 끝이 바닥선에 닿게 합니다. 바닥 그림자는 코드가 그리므로 넣지 않습니다. |
+| 그림의 **가로 폭은 코드가 정하고**, 세로는 그림 비율을 따릅니다. 아래 끝이 바닥에 닿습니다. | 대상이 그림 폭을 꽉 채우게 합니다. 바닥선과 그림자는 넣지 않습니다(그림자는 코드가 그립니다). "ground line"이라고 쓰면 제미나이가 선을 그려 넣어서, 그리지 말라고 적었습니다. |
 | 배경은 투명이어야 하는데 제미나이는 투명 배경을 잘 못 만듭니다. | **단색 마젠타(#FF00FF) 배경**을 요구하고, 스크립트가 그 색을 지웁니다. 그래서 그림 안에는 마젠타·분홍 계열을 쓰지 않습니다. |
 | 지금 그림들은 또렷한 픽셀아트에 **얇은 크림색 테두리**가 있어 길 위에서 잘 보입니다. | 같은 테두리를 요구합니다. |
 | 사람이 다치는 표현은 피합니다. | 장애물 속 사람은 평범하게 앞으로 가는 모습만 그립니다. |
@@ -54,7 +54,7 @@ STYLE: clean, detailed 16-bit retro arcade pixel art, like a modern pixel-art ra
 
 VIEW: straight-on REAR view from directly behind, at eye level, no perspective tilt, no three-quarter angle, nearly left-right symmetric. The subject is moving away from the camera.
 
-FRAMING: exactly one subject, centered, filling about 85% of the image width. The lowest point of the subject (feet, wheels or base) sits on one flat horizontal ground line near the bottom edge. No ground, no floor texture, no shadow, no scenery.
+FRAMING: exactly one subject, centered, filling about 85% of the image width. The lowest point of the subject (feet, wheels or base) is near the bottom edge. Do NOT draw any ground line, floor, shadow or scenery under or around it.
 
 BACKGROUND: one perfectly flat solid magenta color #FF00FF everywhere around the subject, no gradient, no texture, no vignette. Do not use magenta, pink or purple anywhere on the subject itself.
 
@@ -129,7 +129,7 @@ SUBJECT: a single orange traffic cone with two white reflective stripes on a squ
 
 - [ ] 정면 뒷모습이다 (옆이나 비스듬히 보이지 않는다)
 - [ ] 배경이 평평한 마젠타 한 가지 색이고, 대상 안에는 마젠타·분홍이 없다
-- [ ] 대상이 하나이고, 아래 끝이 바닥선에 닿는다
+- [ ] 대상이 하나이고, 발밑에 바닥선이나 그림자가 없다 (얇은 선은 스크립트가 지웁니다)
 - [ ] 글자·숫자·로고·번호판이 없다 (배달 상자, 러닝 크루 티셔츠 포함)
 - [ ] 얇은 크림색 테두리가 있다
 - [ ] 내 탈것 4종은 빨간 모자·하늘색 옷으로 색이 통일돼 있다 (장애물과 바로 구분된다)
@@ -139,6 +139,9 @@ SUBJECT: a single orange traffic cone with two white reflective stripes on a squ
 
 ## 6. 그림을 넣은 뒤 코드에서 맞출 것
 
-그림의 화면 폭은 코드가 종류별로 정합니다(`HighwayEngine.kt`와 `highway-engine.js`의 `TRAFFIC_KINDS` `halfWidth`).
-지금 값은 자동차에 맞춘 것이어서, 사람처럼 좁고 키 큰 그림은 실제보다 크게 보일 수 있습니다.
-새 그림을 넣고 나서 화면을 보며 폭과 충돌 범위를 다시 맞춥니다(앱·웹 같이).
+장애물 그림의 화면 폭은 `TrafficKind`(`HighwayEngine.kt`)와 `TRAFFIC_KINDS`(`highway-engine.js`)의 `drawHalfWidth`가 정합니다.
+충돌 범위(`halfWidth`)와는 따로라서, 그림 크기만 바꿔도 게임 난이도는 그대로입니다.
+`heightFactor`는 그림의 세로/가로 비율로 맞춥니다(스크립트가 출력하는 값).
+그림을 바꾸면 화면을 보고 사람 키가 비슷해지도록 `drawHalfWidth`를 앱·웹 같이 고칩니다.
+
+스크립트는 제미나이 표시(오른쪽 아래 ✦) 같은 작은 조각과 발밑의 얇은 바닥선도 자동으로 지웁니다.

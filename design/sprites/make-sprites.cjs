@@ -34,6 +34,10 @@ const SPRITES = {
 const EXTS = ['.png', '.webp', '.jpg', '.jpeg'];
 // How far from pure magenta still counts as background. Gemini's "flat" color drifts a little.
 const FUZZ = '22%';
+/** Islands smaller than this share of the image area are dropped (Gemini's sparkle mark, specks). */
+const SPECK = 0.0008;
+/** A ground line under the subject is at most this share of the image height thick. */
+const LINE_MAX = 0.03;
 /** The cream outline the prompt asks for. */
 const OUTLINE = '#F5EBD7';
 /** -fx test for a pink-tinted pixel: red and blue well above green. */
@@ -46,12 +50,48 @@ if (!fs.existsSync(SRC)) {
 for (const d of DESTS) fs.mkdirSync(d, { recursive: true });
 
 const magick = (...a) => execFileSync('magick', a, { maxBuffer: 1 << 28 }).toString().trim();
+
+/**
+ * Gemini tends to draw a thin ground line under the subject. The game draws its own shadow, so the
+ * line goes: walking up from the lowest opaque row, rows whose longest opaque run is at least half
+ * the subject's width are line rows, as long as that band stays thin (LINE_MAX of the image height)
+ * and the rows above it are clearly narrower. Feet, wheels and a pothole's rounded rim never make a
+ * long thin band, and a cone's base is too thick to count. Clears those rows in the 0/255 mask.
+ */
+function removeGroundLine(maskFile, W, H) {
+  const a = execFileSync('magick', [maskFile, '-depth', '8', 'gray:-'], { maxBuffer: 1 << 28 });
+  const runOf = (y) => {
+    let best = 0, run = 0, left = W, right = -1;
+    for (let x = 0; x < W; x++) {
+      if (a[y * W + x] > 127) { run++; if (run > best) best = run; left = Math.min(left, x); right = x; } else run = 0;
+    }
+    return { best, span: right - left + 1 };
+  };
+  let bottom = H - 1;
+  while (bottom > 0 && runOf(bottom).best === 0) bottom--;
+  let subjectWidth = 0;
+  for (let y = 0; y <= bottom; y++) subjectWidth = Math.max(subjectWidth, runOf(y).span);
+  // The line's lowest rows can be a faint, broken edge: start from the first long row within a few px.
+  const long = (y) => runOf(y).best >= subjectWidth * 0.5;
+  let lineBottom = bottom;
+  while (bottom - lineBottom < 8 && !long(lineBottom)) lineBottom--;
+  if (!long(lineBottom)) return;
+  let top = lineBottom;
+  while (top > 0 && lineBottom - top < H * LINE_MAX && long(top - 1)) top--;
+  if (lineBottom - top >= H * LINE_MAX) return;
+  // The rows just above the band must be much narrower, or this is the subject's own flat bottom.
+  const above = Math.max(runOf(top - 2).best, runOf(top - 4).best);
+  if (above >= runOf(lineBottom).best * 0.6) return;
+  magick(maskFile, '-fill', 'black', '-draw', `rectangle 0,${top - 1} ${W},${bottom}`, maskFile);
+}
 let done = 0;
 for (const [name, width] of Object.entries(SPRITES)) {
   const ext = EXTS.find((e) => fs.existsSync(path.join(SRC, name + e)));
   if (!ext) continue;
   const src = path.join(SRC, name + ext);
   const out = path.join(DESTS[0], name + '.png');
+  const keyed = path.join(os.tmpdir(), `pathdash-sprite-${name}.png`);
+  const mask = path.join(os.tmpdir(), `pathdash-sprite-${name}-mask.png`);
   magick(
     src, '-alpha', 'set',
     // Every magenta-ish pixel goes transparent (the prompt keeps magenta off the subject, so this
@@ -59,10 +99,20 @@ for (const [name, width] of Object.entries(SPRITES)) {
     '-fuzz', FUZZ, '-transparent', '#FF00FF',
     // Peel one pixel off the silhouette so the pink anti-aliased fringe goes with the background.
     '-channel', 'A', '-morphology', 'Erode', 'Disk:1', '+channel',
+    keyed,
+  );
+  // Small islands go: Gemini's sparkle mark in the corner and stray specks. Anything smaller than
+  // SPECK of the image area is merged into the background in the alpha mask.
+  const [W, H] = magick('identify', '-format', '%w %h', keyed).split(' ').map(Number);
+  magick(keyed, '-alpha', 'extract', '-threshold', '50%',
+    '-define', `connected-components:area-threshold=${Math.round(W * H * SPECK)}`,
+    '-define', 'connected-components:mean-color=true', '-connected-components', '8', mask);
+  removeGroundLine(mask, W, H);
+  magick(keyed, mask, '-compose', 'CopyOpacity', '-composite',
     '-trim', '+repage',
     '-resize', `${width}x`,
-    '-strip', '-define', 'png:compression-level=9', out,
-  );
+    '-strip', '-define', 'png:compression-level=9', out);
+  fs.rmSync(keyed); fs.rmSync(mask);
   // Edge pixels that still carry a pink tint (JPEG and soft edges bleed the background in) take the
   // cream outline color instead. Safe because the prompt keeps pink off the subject.
   // The cream patch is opaque: a see-through one would let the pink under a soft edge show through.

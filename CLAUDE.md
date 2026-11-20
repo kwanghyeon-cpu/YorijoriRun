@@ -30,6 +30,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 ## 진행 상황
 
 - 남은 계정 작업과 교체할 그림 목록은 `NEW_GAME_SETUP.md`.
-- 그림(탈것 4종 뒷모습, 새 장애물, 타이틀, 아이콘)은 아직 Lane Dash 것을 임시로 사용 중.
+- 탈것 4종과 장애물 그림은 새것으로 교체함. 타이틀 화면, 앱 아이콘, 효과음은 아직 Lane Dash 것.
+- 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 `drawHalfWidth`, 충돌은 `halfWidth`로 따로 정한다.
 - GitHub 원격 저장소 없음(로컬 git만).
 - 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

@@ -361,10 +361,12 @@ fun HighwayScreen(
                 val t = tForDz(dz)
                 val y = horizonY + roadH * t
                 val half = roadHalfWidth(t, w)
-                val width = traffic.kind.halfWidth * 2f * half
+                val width = traffic.kind.drawHalfWidth * 2f * half
                 val cx = strips.centerXAt(y, h, rowH) + traffic.lx * half
                 val trafficSprite = trafficSprites[traffic.kind]
-                withFade(fadeForDz(dz), Rect(cx - width, y - width * 1.8f, cx + width, y + width * 0.2f)) {
+                // The fade layer must hold the whole sprite, tall riders included.
+                val top = y - width * (traffic.kind.heightFactor + 0.3f)
+                withFade(fadeForDz(dz), Rect(cx - width, top, cx + width, y + width * 0.2f)) {
                     if (trafficSprite != null) {
                         drawRearSprite(trafficSprite, cx = cx, bottomY = y, width = width)
                     } else {

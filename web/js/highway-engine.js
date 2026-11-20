@@ -144,15 +144,18 @@ function skylineScroll(strips, screenWidth) {
 /**
  * Kinds of obstacle ahead. Vehicles move with traffic (wider/taller ones slower); cones and
  * barriers stand still on the road (speed 0, so they rush at you at your own speed). halfWidth is
- * in road half-widths and heightFactor (height / width) matches the sprite.
+ * the collision half-width in road half-widths; drawHalfWidth only sizes the sprite, so the art can
+ * change without changing the game. heightFactor (height / width) matches the sprite.
+ * Path Dash art: SEDAN = cyclist, SUV = dog walker, BUS = running crew, TRUCK = delivery scooter,
+ * CONE = traffic cone, BARRIER = pothole (the names stay from Lane Dash).
  */
 const TRAFFIC_KINDS = {
-  SEDAN: { name: 'SEDAN', halfWidth: 0.14, heightFactor: 0.74, minSpeed: 9, maxSpeed: 13, sprite: 'assets/rear/traffic_rear_sedan.png', color: '#8D99AE' },
-  SUV: { name: 'SUV', halfWidth: 0.15, heightFactor: 0.88, minSpeed: 8.5, maxSpeed: 12.5, sprite: 'assets/rear/traffic_rear_suv.png', color: '#5C6478' },
-  BUS: { name: 'BUS', halfWidth: 0.19, heightFactor: 1.05, minSpeed: 7, maxSpeed: 10.5, sprite: 'assets/rear/traffic_rear_bus.png', color: '#A7AFBF' },
-  TRUCK: { name: 'TRUCK', halfWidth: 0.18, heightFactor: 1.29, minSpeed: 6, maxSpeed: 9.5, sprite: 'assets/rear/traffic_rear_truck.png', color: '#7F8CA8' },
-  CONE: { name: 'CONE', halfWidth: 0.09, heightFactor: 1.35, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_cone.png', color: '#FF7A1A' },
-  BARRIER: { name: 'BARRIER', halfWidth: 0.17, heightFactor: 1.1, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_barrier.png', color: '#FFE03A' },
+  SEDAN: { name: 'SEDAN', halfWidth: 0.14, drawHalfWidth: 0.12, heightFactor: 2.46, minSpeed: 9, maxSpeed: 13, sprite: 'assets/rear/traffic_rear_sedan.png', color: '#8D99AE' },
+  SUV: { name: 'SUV', halfWidth: 0.15, drawHalfWidth: 0.22, heightFactor: 1.24, minSpeed: 8.5, maxSpeed: 12.5, sprite: 'assets/rear/traffic_rear_suv.png', color: '#5C6478' },
+  BUS: { name: 'BUS', halfWidth: 0.19, drawHalfWidth: 0.24, heightFactor: 1.02, minSpeed: 7, maxSpeed: 10.5, sprite: 'assets/rear/traffic_rear_bus.png', color: '#A7AFBF' },
+  TRUCK: { name: 'TRUCK', halfWidth: 0.18, drawHalfWidth: 0.18, heightFactor: 1.62, minSpeed: 6, maxSpeed: 9.5, sprite: 'assets/rear/traffic_rear_truck.png', color: '#7F8CA8' },
+  CONE: { name: 'CONE', halfWidth: 0.09, drawHalfWidth: 0.09, heightFactor: 1.2, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_cone.png', color: '#FF7A1A' },
+  BARRIER: { name: 'BARRIER', halfWidth: 0.17, drawHalfWidth: 0.17, heightFactor: 0.43, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_barrier.png', color: '#FFE03A' },
 };
 
 const HW = {

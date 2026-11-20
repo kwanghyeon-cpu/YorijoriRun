@@ -32,7 +32,11 @@ node tools/rename-project.cjs PathDash 새이름 "Path Dash" "새 이름"
 6. **GitHub / 웹**: 새 저장소를 만들어 푸시하고 Pages를 켜면 공유 링크(`WEB_PLAY_URL`)가 살아납니다.
    지금은 `https://kwanghyeon-cpu.github.io/PathDash/web/`로 가정해 두었습니다.
 
-## 교체할 그림·소리 (지금은 Lane Dash 것을 임시로 사용)
+## 교체할 그림·소리
+
+탈것 4종과 장애물 6종 그림은 교체를 마쳤습니다(2026-11-20, 제미나이 원본 → `make-sprites.cjs`).
+남은 것은 타이틀 화면·앱 아이콘과 효과음이고, 도시 배경은 그대로 씁니다.
+
 | 파일 | 새 내용 |
 |---|---|
 | `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·리어카·킥보드 (뒷모습, 순서대로 1~4) |

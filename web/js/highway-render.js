@@ -281,7 +281,7 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     const t = tForDz(dz);
     const y = horizonY + roadH * t;
     const half = roadHalfWidth(t, w);
-    const width = traffic.kind.halfWidth * 2 * half;
+    const width = traffic.kind.drawHalfWidth * 2 * half;
     const cx = hwStrips.centerXAt(y, h, rowH) + traffic.lx * half;
     ctx.save();
     ctx.globalAlpha = fadeForDz(dz);
