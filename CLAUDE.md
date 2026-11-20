@@ -26,6 +26,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 웹 테스트: `node --test web/test/highway.test.mjs`
 - 난이도 측정: `node tools/difficulty-planner.mjs` (앞을 내다보는 봇으로 생존 시간 측정)
 - 스토어 스크린샷 생성: `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1` → `store-assets/screenshots-1.0/`(커밋 안 함). 스토어 문구 초안은 `store-listing.md`. 피처 그래픽(1024×500)은 `node design/title-icon/make-feature-graphic.cjs` → `design/icon/feature_graphic.png`(타이틀 그림·탈것 그림·로고로 조합, 셋 중 하나가 바뀌면 다시 만든다). 기능을 바꾸면 문구와 `privacy-policy.md`도 맞춘다.
+- 출시 자료: `:app:bundleRelease`와 스크린샷 뒤 `node tools/make-release-assets.cjs` → `store-assets/release-<버전>/`(커밋 안 함, 스크린샷은 Play 규격대로 투명 채널 없는 24비트 PNG로 바꿈). Play Console 올리는 순서는 `RELEASE.md`.
 - 배경 가공: `design/city-backdrops/make-backdrops.cjs`, 제미나이 프롬프트 예시 `design/city-backdrops/gemini-prompts.md`
 - 탈것·장애물 그림 가공: `node design/sprites/make-sprites.cjs` (`--dry`는 임시 폴더에만 저장), 프롬프트 `design/sprites/gemini-prompts.md`. 원본은 `design/sprites/gemini-originals/`(커밋 안 함)
 - 타이틀·앱 아이콘 가공: `node design/title-icon/make-title-icon.cjs` (`--dry` 가능), 프롬프트 `design/title-icon/gemini-prompts.md`. 원본 `home_portrait.*`·`app_icon.*`은 `design/title-icon/gemini-originals/`(커밋 안 함). 스토어 아이콘은 `design/icon/store_icon_512.png`. `design/icon/make_icon.mjs`와 svg들은 Lane Dash 시절 자동차 아이콘용이라 쓰지 않는다.

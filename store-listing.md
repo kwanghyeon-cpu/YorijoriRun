@@ -78,6 +78,8 @@ Play Console의 **스토어 등록정보** 화면에 그대로 붙여 넣을 수
 | 휴대전화 스크린샷 | 1080×1920, 2~8장 | `store-assets/screenshots-1.0/01_gameplay.png` ~ `07_gameover.png` (7장, `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`로 다시 만들 수 있음) |
 | 그래픽 이미지(피처 그래픽) | 1024×500 | `design/icon/feature_graphic.png` (타이틀 그림의 하늘·산책로 + 탈것 4종 + 로고. `node design/title-icon/make-feature-graphic.cjs`로 다시 만들 수 있음) |
 
+올릴 때는 `node tools/make-release-assets.cjs`가 위 파일을 `store-assets/release-<버전>/`에 모으고, 스크린샷의 투명 채널을 없앱니다(Play는 투명 채널이 있는 스크린샷을 받지 않음).
+
 ## 연락처·개인정보
 
 - 개인정보처리방침: `privacy-policy.md` 내용을 인터넷 주소로 올려야 합니다(예: GitHub Pages).
