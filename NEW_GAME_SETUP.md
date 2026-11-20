@@ -36,7 +36,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 
 ## 교체할 그림·소리
 
-그림은 모두 교체를 마쳤습니다(2026-11-20). 남은 것은 **효과음**뿐이고, 도시 배경은 그대로 씁니다.
+그림과 소리는 모두 교체를 마쳤습니다(2026-11-20). 도시 배경만 그대로 씁니다.
 
 | 파일 | 내용 | 상태 |
 |---|---|---|
@@ -46,7 +46,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 | `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 |
 | `ic_launcher_foreground.png`, `design/icon/store_icon_512.png` | 요리조리 피하는 러너 아이콘 (배경 층은 보라색 그라데이션 그대로) | 교체함 |
 | `city_*.png` | 길 건너편 도시 | 그대로 씀 |
-| 효과음 7개 (`res/raw`, `web/assets/sfx`, `web/assets/bgm`) | 무료 사이트에서 고르기. 고르는 법과 검색어는 `design/sounds/README.md`, 출처는 `design/sounds/SOURCES.md`에 적기 → `design/sounds/originals/`에 저장 → `node design/sounds/make-sounds.cjs` | **남음** |
+| 효과음 7개 (`res/raw`, `web/assets/sfx`, `web/assets/bgm`) | `design/sounds/synth-sounds.cjs`로 직접 합성한 칩튠 소리(라이선스 필요 없음) | 교체함 |
 
 그림을 다시 만들 때:
 - 탈것·장애물: 프롬프트 `design/sprites/gemini-prompts.md` → `design/sprites/gemini-originals/`에 같은 파일 이름으로 저장 →
@@ -54,8 +54,10 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 - 타이틀·아이콘: 프롬프트 `design/title-icon/gemini-prompts.md` → `design/title-icon/gemini-originals/`에
   `home_portrait.png`·`app_icon.png`로 저장 → `node design/title-icon/make-title-icon.cjs`.
 - Play Console에는 `design/icon/store_icon_512.png`를 고해상도 아이콘으로 올립니다.
+- 소리: `design/sounds/synth-sounds.cjs`의 해당 함수를 고치고 `node design/sounds/synth-sounds.cjs`를 실행합니다. 웹은 `audio.js`의
+  `SOUND_VERSION`을 올립니다. 무료 사이트 소리로 바꾸려면 `design/sounds/README.md`(고르기 가이드)와 `make-sounds.cjs`를 씁니다.
 
-코드 쪽 남은 일: 없음(그림·소리 교체만 남음).
+코드 쪽 남은 일: 없음(그림·소리 교체도 끝남).
 (문구 정리·속도계도 끝남. 탈것 이름은 조깅·자전거·리어카·킥보드, 속도계는 15~25 km/h, 게임오버는 "부딪혔어요".)
 (도로 → 산책로는 끝남. 도시별 길 색: 서울 적갈색 우레탄, 도쿄 남색, 뉴욕 회청색, 파리 모래색. 연석은 회색 경계석, 가로등은 낮은 공원 등.)
-(연료 → 체력(생수병)은 끝남. 화면 문구·아이콘·게이지만 바꿨고 엔진 이름 `fuel`은 그대로다. `sfx_fuel_low` 경고음은 효과음 교체 때 같이 바꾼다.)
+(연료 → 체력(생수병)은 끝남. 화면 문구·아이콘·게이지만 바꿨고 엔진 이름 `fuel`은 그대로다. `sfx_fuel_low` 경고음도 새 "삐삐" 소리로 바꿨다.)

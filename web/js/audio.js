@@ -1,12 +1,15 @@
 // Mirrors app/src/main/java/.../audio/SoundManager.kt — same events, same WAV assets.
 
+// Bump SOUND_VERSION whenever the WAVs change (design/sounds/synth-sounds.cjs), so browsers
+// that cached the old files fetch the new ones.
+const SOUND_VERSION = 2;
 const SFX_PATHS = {
-  COIN: 'assets/sfx/sfx_coin.wav',
-  CRASH: 'assets/sfx/sfx_crash.wav',
-  FUEL_EMPTY: 'assets/sfx/sfx_gameover.wav',
-  LANE_CHANGE: 'assets/sfx/sfx_lane.wav',
-  FUEL_LOW_WARNING: 'assets/sfx/sfx_fuel_low.wav',
-  NEW_BEST: 'assets/sfx/sfx_newbest.wav',
+  COIN: `assets/sfx/sfx_coin.wav?v=${SOUND_VERSION}`,
+  CRASH: `assets/sfx/sfx_crash.wav?v=${SOUND_VERSION}`,
+  FUEL_EMPTY: `assets/sfx/sfx_gameover.wav?v=${SOUND_VERSION}`,
+  LANE_CHANGE: `assets/sfx/sfx_lane.wav?v=${SOUND_VERSION}`,
+  FUEL_LOW_WARNING: `assets/sfx/sfx_fuel_low.wav?v=${SOUND_VERSION}`,
+  NEW_BEST: `assets/sfx/sfx_newbest.wav?v=${SOUND_VERSION}`,
 };
 
 // Newer events reuse existing clips at a different pitch instead of shipping new audio
@@ -35,7 +38,7 @@ class AudioManager {
       el.preload = 'auto';
       this.buffers[key] = el;
     }
-    this.bgm = new Audio('assets/bgm/bgm_loop.wav');
+    this.bgm = new Audio(`assets/bgm/bgm_loop.wav?v=${SOUND_VERSION}`);
     this.bgm.loop = true;
     this.unlocked = false;
 
