@@ -25,7 +25,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 앱 테스트: `JAVA_HOME="C:\Program Files\Android\Android Studio\jbr" ./gradlew.bat :app:testDebugUnitTest`
 - 웹 테스트: `node --test web/test/highway.test.mjs`
 - 난이도 측정: `node tools/difficulty-planner.mjs` (앞을 내다보는 봇으로 생존 시간 측정)
-- 스토어 스크린샷 생성: `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1` → `store-assets/screenshots-0.1/`(커밋 안 함). 스토어 문구 초안은 `store-listing.md`. 피처 그래픽(1024×500)은 `node design/title-icon/make-feature-graphic.cjs` → `design/icon/feature_graphic.png`(타이틀 그림·탈것 그림·로고로 조합, 셋 중 하나가 바뀌면 다시 만든다). 기능을 바꾸면 문구와 `privacy-policy.md`도 맞춘다.
+- 스토어 스크린샷 생성: `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1` → `store-assets/screenshots-1.0/`(커밋 안 함). 스토어 문구 초안은 `store-listing.md`. 피처 그래픽(1024×500)은 `node design/title-icon/make-feature-graphic.cjs` → `design/icon/feature_graphic.png`(타이틀 그림·탈것 그림·로고로 조합, 셋 중 하나가 바뀌면 다시 만든다). 기능을 바꾸면 문구와 `privacy-policy.md`도 맞춘다.
 - 배경 가공: `design/city-backdrops/make-backdrops.cjs`, 제미나이 프롬프트 예시 `design/city-backdrops/gemini-prompts.md`
 - 탈것·장애물 그림 가공: `node design/sprites/make-sprites.cjs` (`--dry`는 임시 폴더에만 저장), 프롬프트 `design/sprites/gemini-prompts.md`. 원본은 `design/sprites/gemini-originals/`(커밋 안 함)
 - 타이틀·앱 아이콘 가공: `node design/title-icon/make-title-icon.cjs` (`--dry` 가능), 프롬프트 `design/title-icon/gemini-prompts.md`. 원본 `home_portrait.*`·`app_icon.*`은 `design/title-icon/gemini-originals/`(커밋 안 함). 스토어 아이콘은 `design/icon/store_icon_512.png`. `design/icon/make_icon.mjs`와 svg들은 Lane Dash 시절 자동차 아이콘용이라 쓰지 않는다.
@@ -41,5 +41,6 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 종류별 `drawHalfWidth`, 충돌 폭은 모든 장애물이 `OBSTACLE_HALF_WIDTH`(0.15) 하나다. 장애물은 늘 차선 한가운데 있어서 폭은 차선을 옮기는 중에만 의미가 있고, 그림과 상관없게 했다.
 - 내 탈것은 모두 같은 높이 `PLAYER_DRAW_HEIGHT`(0.62)로 그리고, 가로로 넓은 그림은 폭이 `PLAYER_DRAW_MAX_WIDTH`(0.38, 한 차선 안)에서 멈춘다(비율 유지). 충돌은 모든 탈것이 `PLAYER_HALF_WIDTH`로 같다. 3번 탈것은 처음에 리어카였는데 넓은 그림이라 작게 보여서, 세로로 긴 배달 전동 카트("배달 카트", id는 `cart` 그대로)로 바꿨다.
 - 길에는 차선 점선을 그리지 않는다(산책로라서). 5칸은 게임 규칙에만 있다.
+- 캐릭터는 코드로 움직인다(종이인형처럼 미끄러지지 않게): 달리기는 걸음마다 튀고 착지 때 눌리며 좌우로 흔들리고, 자전거는 페달 박자로 흔들리고, 킥보드는 주기적으로 발을 구르고, 전동 탈것은 미세하게 떤다. 그리기 전용이라 엔진·충돌은 그대로다. 앱 `ui/screens/HighwayMotion.kt` ↔ 웹 `highway-render.js`의 `riderPose`, 숫자는 같이 바꾼다.
 - GitHub 공개 저장소 `kwanghyeon-cpu/YorijoriRun`(2026-11-20, origin). GitHub Pages가 master 루트를 배포한다: 웹 게임 https://kwanghyeon-cpu.github.io/YorijoriRun/web/ , 개인정보처리방침 https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy . master에 합친 뒤 푸시하면 바로 반영되니, 웹 파일을 바꾸면 `?v=` 캐시 번호를 꼭 올린다. Firebase는 이 게임 전용 새 프로젝트 `yorijori-run`이다(Lane Dash와 분리). 앱은 `app/google-services.json`(로컬 전용), 웹은 `web/js/leaderboard.js`의 설정(공개돼도 되는 값)을 쓴다. 규칙은 `firestore.rules`를 콘솔에 붙여 넣어 게시한다.
 - 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

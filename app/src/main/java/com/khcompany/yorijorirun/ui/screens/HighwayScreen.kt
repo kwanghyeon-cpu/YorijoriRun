@@ -44,7 +44,7 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import com.khcompany.yorijorirun.ui.components.WATER_ITEM_COLOR
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -346,7 +346,13 @@ fun HighwayScreen(
                 val top = y - width * (traffic.kind.heightFactor + 0.3f)
                 withFade(fadeForDz(dz), Rect(cx - width, top, cx + width, y + width * 0.2f)) {
                     if (trafficSprite != null) {
-                        drawRearSprite(trafficSprite, cx = cx, bottomY = y, width = width)
+                        val pose = riderPose(
+                            motionStyleFor(traffic.kind),
+                            engine.elapsedSeconds,
+                            trafficCadence(traffic.speed),
+                            motionPhase(traffic.id),
+                        )
+                        drawRearSprite(trafficSprite, cx = cx, bottomY = y, width = width, pose = pose)
                     } else {
                         val (body, roof) = trafficColors(traffic.kind)
                         drawRearCar(cx, y, width, traffic.kind.heightFactor, body, roof)
@@ -373,6 +379,12 @@ fun HighwayScreen(
                     bottomY = playerY,
                     width = playerWidth,
                     leanDegrees = engine.steerLean * MAX_LEAN_DEGREES,
+                    pose = riderPose(
+                        motionStyleForRide(car.id),
+                        engine.elapsedSeconds,
+                        playerCadence(engine.speed / HighwayEngine.MAX_SPEED),
+                        0f,
+                    ),
                 )
             } else {
                 drawRearCar(
@@ -821,11 +833,20 @@ private fun DrawScope.drawRearSprite(
     bottomY: Float,
     width: Float,
     leanDegrees: Float = 0f,
+    pose: RiderPose = RiderPose.STILL,
 ) {
     val height = width * sprite.height / sprite.width
-    drawGroundShadow(cx, bottomY, width, height)
-    // Leaning pivots on the tires' contact line so the car rolls into the turn, not off its shadow.
-    rotate(leanDegrees, pivot = Offset(cx, bottomY)) {
+    // The shadow stays on the ground; it shrinks and fades a little while the rider is in the air.
+    val air = pose.lift.coerceIn(0f, 0.2f)
+    drawGroundShadow(cx, bottomY, width * (1f - 2f * air), height, alpha = 0.38f * (1f - 4f * air))
+    val pivot = Offset(cx, bottomY)
+    // Leaning and the pose's rock both pivot on the contact line, so the rider rolls into the turn
+    // and sways over its own feet/wheels; the hop lifts it off the shadow; the squash keeps the feet down.
+    withTransform({
+        rotate(leanDegrees + pose.tiltDegrees, pivot = pivot)
+        translate(top = -air * height)
+        scale(pose.scaleX, pose.scaleY, pivot = pivot)
+    }) {
         drawImage(
             image = sprite,
             srcSize = IntSize(sprite.width, sprite.height),

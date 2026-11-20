@@ -109,8 +109,51 @@ function drawHighwaySpeedLines(ctx, w, h, speedRatio, elapsedSeconds, focalY) {
   }
 }
 
+// Procedural "alive" motion so riders bob and sway instead of sliding like paper cut-outs. Drawing
+// only: the engine, hitboxes and lanes are untouched. Mirrors HighwayMotion.kt — change both together.
+const STILL_POSE = { lift: 0, scaleX: 1, scaleY: 1, tilt: 0 };
+const RIDE_MOTION = { jogging: 'RUN', bicycle: 'BIKE', kickboard: 'KICK', cart: 'MOTOR' };
+const TRAFFIC_MOTION = { SEDAN: 'BIKE', SUV: 'RUN', BUS: 'RUN', TRUCK: 'MOTOR', CONE: 'NONE', BARRIER: 'NONE' };
+
+/**
+ * The pose at `seconds` of game time: lift (fraction of sprite height), squash about the bottom
+ * center, and tilt in degrees about the same point. `cadence` scales the rhythm; `phase` (0..1)
+ * keeps neighbours from moving in lockstep.
+ */
+function riderPose(style, seconds, cadence, phase) {
+  const tau = Math.PI * 2;
+  switch (style) {
+    case 'RUN': {
+      // One bounce per step; the body sways toward the planted foot (tilt flips every step).
+      const steps = seconds * 2.7 * cadence + phase * 2;
+      const air = Math.abs(Math.sin(Math.PI * steps));
+      const land = Math.pow(1 - air, 3);
+      return { lift: 0.05 * air, scaleX: 1 + 0.04 * land, scaleY: 1 - 0.06 * land, tilt: 3.2 * Math.sin(Math.PI * steps) };
+    }
+    case 'BIKE': {
+      const crank = tau * (seconds * 1.4 * cadence + phase);
+      return { lift: 0.01 * Math.abs(Math.sin(crank)), scaleX: 1, scaleY: 1, tilt: 3.5 * Math.sin(crank) };
+    }
+    case 'KICK': {
+      const cycle = seconds * 0.8 * cadence + phase;
+      const u = cycle - Math.floor(cycle);
+      const push = u < 0.25 ? Math.sin(Math.PI * u / 0.25) : 0;
+      return { lift: 0.035 * push, scaleX: 1, scaleY: 1 + 0.02 * push, tilt: -2.2 * push + 0.8 * Math.sin(tau * cycle) };
+    }
+    case 'MOTOR': {
+      const t = seconds + phase * 10;
+      return { lift: 0.006 * (0.5 + 0.5 * Math.sin(tau * 13 * t)), scaleX: 1, scaleY: 1, tilt: 1.2 * Math.sin(tau * 1.1 * cadence * t) };
+    }
+    default:
+      return STILL_POSE;
+  }
+}
+function motionPhase(id) { const x = id * 0.6180339; return x - Math.floor(x); }
+function trafficCadence(speed) { return Math.min(1.25, Math.max(0.7, 0.8 + 0.4 * (speed - 6) / 7)); }
+function playerCadence(speedRatio) { return 0.85 + 0.4 * Math.min(1, Math.max(0, speedRatio)); }
+
 /** Rear-view sprite, bottom-anchored; the height follows the image's own aspect ratio. */
-function drawHighwayRearSprite(ctx, img, cx, bottomY, width, leanRadians, fallbackColor) {
+function drawHighwayRearSprite(ctx, img, cx, bottomY, width, leanRadians, fallbackColor, pose = STILL_POSE) {
   if (!img || !img.complete || img.naturalWidth === 0) {
     const height = width * 0.8;
     drawGroundShadow(ctx, cx, bottomY, width, height);
@@ -119,11 +162,16 @@ function drawHighwayRearSprite(ctx, img, cx, bottomY, width, leanRadians, fallba
     return;
   }
   const height = width * img.naturalHeight / img.naturalWidth;
-  drawGroundShadow(ctx, cx, bottomY, width, height);
-  // Leaning pivots on the tires' contact line so the car rolls into the turn, not off its shadow.
+  // The shadow stays on the ground; it shrinks and fades a little while the rider is in the air.
+  const air = Math.min(0.2, Math.max(0, pose.lift));
+  drawGroundShadow(ctx, cx, bottomY, width * (1 - 2 * air), height, 0.38 * (1 - 4 * air));
+  // Leaning and the pose's rock pivot on the contact line; the hop lifts the sprite off its shadow;
+  // the squash keeps the feet on the ground.
   ctx.save();
   ctx.translate(cx, bottomY);
-  ctx.rotate(leanRadians);
+  ctx.rotate(leanRadians + pose.tilt * Math.PI / 180);
+  ctx.translate(0, -air * height);
+  ctx.scale(pose.scaleX, pose.scaleY);
   ctx.drawImage(img, -width / 2, -height, width, height);
   ctx.restore();
 }
@@ -265,7 +313,8 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     const cx = hwStrips.centerXAt(y, h, rowH) + traffic.lx * half;
     ctx.save();
     ctx.globalAlpha = fadeForDz(dz);
-    drawHighwayRearSprite(ctx, images[traffic.kind.sprite], cx, y, width, 0, traffic.kind.color);
+    const pose = riderPose(TRAFFIC_MOTION[traffic.kind.name], engine.elapsedSeconds, trafficCadence(traffic.speed), motionPhase(traffic.id));
+    drawHighwayRearSprite(ctx, images[traffic.kind.sprite], cx, y, width, 0, traffic.kind.color, pose);
     ctx.restore();
   }
 
@@ -281,6 +330,7 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   drawHighwayRearSprite(
     ctx, playerImg, playerCx, playerY, playerWidth,
     engine.steerLean * HW_MAX_LEAN_DEGREES * Math.PI / 180, '#E63946',
+    riderPose(RIDE_MOTION[car.id], engine.elapsedSeconds, playerCadence(engine.speed / HW.MAX_SPEED), 0),
   );
   // Power-up effects around the car.
   const bodyY = playerY - playerHeight / 2;
