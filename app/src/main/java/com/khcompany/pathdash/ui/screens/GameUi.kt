@@ -47,8 +47,8 @@ internal fun shareScore(context: Context, score: Int, best: Int, cityName: Strin
 }
 
 @Composable
-internal fun FuelGauge(fuelFraction: () -> Float, modifier: Modifier = Modifier) {
-    val fraction = fuelFraction().coerceIn(0f, 1f)
+internal fun StaminaGauge(staminaFraction: () -> Float, modifier: Modifier = Modifier) {
+    val fraction = staminaFraction().coerceIn(0f, 1f)
     val barColor = when {
         fraction > 0.5f -> Color(0xFF4CAF50)
         fraction > 0.2f -> Color(0xFFFFC93C)
@@ -56,8 +56,8 @@ internal fun FuelGauge(fuelFraction: () -> Float, modifier: Modifier = Modifier)
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         HudIconText(
-            icon = GameIcon.GAS_PUMP,
-            text = "FUEL",
+            icon = GameIcon.WATER_BOTTLE,
+            text = "체력",
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
             style = MaterialTheme.typography.bodyLarge,
             iconSize = 16,

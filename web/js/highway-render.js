@@ -246,7 +246,7 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     const cx = hwStrips.centerXAt(y, h, rowH) + item.lx * half;
     ctx.save();
     ctx.globalAlpha = fadeForDz(dz);
-    const color = item.type === 'FUEL' ? FUEL_ITEM_COLOR : item.type === 'SHIELD' ? SHIELD_ITEM_COLOR : MAGNET_ITEM_COLOR;
+    const color = item.type === 'FUEL' ? WATER_ITEM_COLOR : item.type === 'SHIELD' ? SHIELD_ITEM_COLOR : MAGNET_ITEM_COLOR;
     // A pickup must never be mistaken for a car: a pad ringed on the road, a halo, a white rim and
     // a gentle bob — none of which a vehicle or an obstacle has.
     ctx.strokeStyle = hexA(color, 0.85);
@@ -262,7 +262,7 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 2.3, 0, Math.PI * 2);
     ctx.fill();
-    if (item.type === 'FUEL') drawFuelCanItem(ctx, cx, cy, radius);
+    if (item.type === 'FUEL') drawWaterBottleItem(ctx, cx, cy, radius);
     else if (item.type === 'SHIELD') drawShieldItem(ctx, cx, cy, radius);
     else drawMagnetItem(ctx, cx, cy, radius);
     ctx.strokeStyle = 'rgba(255,255,255,0.9)';

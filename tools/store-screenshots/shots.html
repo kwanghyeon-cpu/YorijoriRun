@@ -87,8 +87,8 @@ function hud(ctx, engine, x0, y0, w, { toast, chips = [] } = {}) {
   ctx.fillStyle = '#FFC93C'; ctx.font = '700 56px Pretendard'; ctx.fillText(`SCORE ${engine.score}`, x0 + w - 48, y0 + 84);
   ctx.fillStyle = '#F4EFFF'; ctx.font = '500 34px Pretendard'; ctx.fillText(`BEST ${engine.score}`, x0 + w - 48, y0 + 132);
   ctx.textAlign = 'center';
-  drawIconGlyph(ctx, 'gasPump', x0 + w / 2 - 54, y0 + 204, 34, 'rgba(244,239,255,0.8)');
-  ctx.fillStyle = 'rgba(244,239,255,0.8)'; ctx.font = '600 32px Pretendard'; ctx.fillText('FUEL', x0 + w / 2 + 8, y0 + 215);
+  drawIconGlyph(ctx, 'waterBottle', x0 + w / 2 - 54, y0 + 204, 34, 'rgba(244,239,255,0.8)');
+  ctx.fillStyle = 'rgba(244,239,255,0.8)'; ctx.font = '600 32px Pretendard'; ctx.fillText('체력', x0 + w / 2 + 8, y0 + 215);
   const bw = 520, bh = 34, bx = x0 + w / 2 - bw / 2, by = y0 + 234;
   rr(ctx, bx, by, bw, bh, 17); ctx.fillStyle = 'rgba(42,26,74,0.7)'; ctx.fill();
   const f = Math.max(0, Math.min(1, engine.fuel / 100));
@@ -152,7 +152,7 @@ const shots = {
     const c = shotCanvas(), ctx = c.getContext('2d');
     const e = run({ seed: 5, seconds: 17, lane: 1, cars: [[4.5, 3, 'SEDAN']], items: [[1.8, 1, 'SHIELD'], [3.4, 2, 'MAGNET'], [5.2, 0, 'FUEL'], [6.8, 1, 'FUEL']], shield: 4.3, magnet: 6.1, fuel: 58 });
     play(ctx, e, 'paris', 'sedan', { chips: [['shield', '#4DA3FF', '방어막 5초'], ['magnet', '#E63946', '자석 7초']] });
-    band(ctx, '연료·방어막·자석을 모아요', '연료가 줄어들기 전에 연료통을 챙기세요');
+    band(ctx, '생수·방어막·자석을 모아요', '체력이 떨어지기 전에 생수병을 챙기세요');
     return c;
   },
   '04_speed'() {
@@ -196,10 +196,10 @@ const shots = {
     rr(ctx, cx, cy, cw, 1000, 48); ctx.fillStyle = '#2A1A4A'; ctx.fill();
     ctx.textAlign = 'center';
     ctx.fillStyle = '#FF3D8B'; ctx.font = '800 64px Pretendard'; ctx.fillText('GAME OVER', W / 2, cy + 110);
-    ctx.fillStyle = '#CDBBFF'; ctx.font = '500 36px Pretendard'; ctx.fillText('연료 소진', W / 2, cy + 168);
+    ctx.fillStyle = '#CDBBFF'; ctx.font = '500 36px Pretendard'; ctx.fillText('체력 소진', W / 2, cy + 168);
     ctx.fillStyle = '#F4EFFF'; ctx.font = '700 56px Pretendard'; ctx.fillText(`SCORE ${e.score}`, W / 2, cy + 260);
     ctx.fillStyle = '#FFC93C'; ctx.font = '700 36px Pretendard'; ctx.fillText('NEW BEST!', W / 2, cy + 318);
-    ctx.fillStyle = '#CDBBFF'; ctx.font = '500 30px Pretendard'; ctx.fillText(`생존 ${Math.floor(e.elapsedSeconds)}초 · 근접 회피 ${e.nearMissCount}회 · 연료 ${e.fuelCollected}개`, W / 2, cy + 376);
+    ctx.fillStyle = '#CDBBFF'; ctx.font = '500 30px Pretendard'; ctx.fillText(`생존 ${Math.floor(e.elapsedSeconds)}초 · 근접 회피 ${e.nearMissCount}회 · 생수 ${e.fuelCollected}병`, W / 2, cy + 376);
     drawIconGlyph(ctx, 'trophy', W / 2 - 150, cy + 442, 44, '#FFC93C');
     ctx.fillStyle = '#FFC93C'; ctx.font = '700 40px Pretendard'; ctx.fillText('TOP 10 진입!', W / 2 + 20, cy + 456);
     rr(ctx, cx + 50, cy + 490, cw - 100, 90, 20); ctx.strokeStyle = 'rgba(244,239,255,0.35)'; ctx.lineWidth = 3; ctx.stroke();

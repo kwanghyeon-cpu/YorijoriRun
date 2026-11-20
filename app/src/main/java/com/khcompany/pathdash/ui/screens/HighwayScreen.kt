@@ -45,7 +45,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
-import com.khcompany.pathdash.ui.components.FUEL_ITEM_COLOR
+import com.khcompany.pathdash.ui.components.WATER_ITEM_COLOR
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -70,7 +70,7 @@ import com.khcompany.pathdash.ui.components.drawShieldItem
 import com.khcompany.pathdash.ui.components.drawShieldBubble
 import com.khcompany.pathdash.ui.components.drawMagnetItem
 import com.khcompany.pathdash.ui.components.drawMagnetAura
-import com.khcompany.pathdash.ui.components.drawFuelCanItem
+import com.khcompany.pathdash.ui.components.drawWaterBottleItem
 import com.khcompany.pathdash.ui.components.SHIELD_ITEM_COLOR
 import com.khcompany.pathdash.ui.components.MAGNET_ITEM_COLOR
 import com.khcompany.pathdash.game.ItemType
@@ -324,7 +324,7 @@ fun HighwayScreen(
                 val radius = ITEM_RADIUS * half * pulse
                 val cx = strips.centerXAt(y, h, rowH) + item.lx * half
                 val color = when (item.type) {
-                    ItemType.FUEL -> FUEL_ITEM_COLOR
+                    ItemType.FUEL -> WATER_ITEM_COLOR
                     ItemType.SHIELD -> SHIELD_ITEM_COLOR
                     ItemType.MAGNET -> MAGNET_ITEM_COLOR
                 }
@@ -344,7 +344,7 @@ fun HighwayScreen(
                     center = center,
                 )
                 when (item.type) {
-                    ItemType.FUEL -> drawFuelCanItem(center, radius)
+                    ItemType.FUEL -> drawWaterBottleItem(center, radius)
                     ItemType.SHIELD -> drawShieldItem(center, radius)
                     ItemType.MAGNET -> drawMagnetItem(center, radius)
                 }
@@ -509,7 +509,7 @@ fun HighwayScreen(
         if (engine.status == GameStatus.GAME_OVER) {
             HighwayDialog(title = "GAME OVER") {
                 Text(
-                    text = if (engine.gameOverReason == GameOverReason.FUEL_EMPTY) "연료 소진" else "충돌 발생",
+                    text = if (engine.gameOverReason == GameOverReason.FUEL_EMPTY) "체력 소진" else "충돌 발생",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 6.dp),
@@ -527,7 +527,7 @@ fun HighwayScreen(
                 )
                 val statColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 Text(
-                    text = "생존 ${engine.elapsedSeconds.toInt()}초 · 근접 회피 ${engine.nearMissCount}회 · 연료 ${engine.fuelCollected}개",
+                    text = "생존 ${engine.elapsedSeconds.toInt()}초 · 근접 회피 ${engine.nearMissCount}회 · 생수 ${engine.fuelCollected}병",
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
                     color = statColor,
                 )
@@ -662,8 +662,8 @@ private fun HighwayHud(engine: HighwayEngine, highScore: Int, modifier: Modifier
                 )
             }
         }
-        FuelGauge(
-            fuelFraction = { engine.fuel / HighwayEngine.MAX_FUEL },
+        StaminaGauge(
+            staminaFraction = { engine.fuel / HighwayEngine.MAX_FUEL },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 76.dp),

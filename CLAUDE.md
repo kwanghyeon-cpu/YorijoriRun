@@ -7,7 +7,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 세로 화면, 차 뒤에서 바라보는 의사 3D 5차선 길. 좌우 버튼으로 한 번에 한 차선씩 이동.
 - 엔진은 순수 로직이고 앱과 웹이 같은 값을 쓴다: `app/.../game/highway/HighwayEngine.kt`·`HighwayRoad.kt` ↔ `web/js/highway-engine.js`. **숫자를 바꾸면 양쪽을 같이 바꾼다.**
 - 렌더링: `ui/screens/HighwayScreen.kt`·`HighwayFx.kt` ↔ `web/js/highway-render.js`.
-- 연료·연료통·방어막·자석, 근접 회피 보너스, 후반 난이도 상승(`late`), 게이트(한 차선만 비운 장애물 줄).
+- 체력·생수병·방어막·자석(코드에서는 Lane Dash 이름 그대로 `fuel`/`FUEL`. 화면 문구와 그림만 체력·생수로 바꿨다), 근접 회피 보너스, 후반 난이도 상승(`late`), 게이트(한 차선만 비운 장애물 줄).
 - 광고: 게임오버 전면광고(10판마다) + 보상형 이어하기. 순위표: Firestore `scores_pathdash`.
 
 ## 이 프로젝트에서 지켜야 할 것

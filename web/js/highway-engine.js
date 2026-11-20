@@ -178,7 +178,9 @@ const HW = {
   /** Extra lateral distance beyond touching that still counts as a near miss. */
   NEAR_MISS_MARGIN: 0.10,
   NEAR_MISS_FLASH_SECONDS: 0.9,
-  // Fuel and pickups (the drain is gentle: pickups sit in lanes you also have to dodge in).
+  // "Fuel" is the runner's stamina (체력 on screen) and FUEL pickups are water bottles; the names stay
+  // from Lane Dash so the two engines and their tests line up. Fuel and pickups (the drain is gentle:
+  // pickups sit in lanes you also have to dodge in).
   MAX_FUEL: 100,
   FUEL_DRAIN_PER_SECOND: 3.5,
   FUEL_REFILL_AMOUNT: 26,

@@ -302,6 +302,7 @@ function updateHud() {
   document.querySelector('.controls-hint').style.opacity = engine.elapsedSeconds < 4 ? '1' : '0';
   setPowerupChip('hud-shield', engine.shieldTimeLeft, '방어막');
   setPowerupChip('hud-magnet', engine.magnetTimeLeft, '자석');
+  // The engine's "fuel" is the runner's stamina, shown as 체력.
   const fuelPct = Math.max(0, Math.min(100, engine.fuel));
   const fuelBar = document.getElementById('fuel-bar');
   fuelBar.style.width = fuelPct + '%';
@@ -329,12 +330,12 @@ function showGameOver() {
   justSubmittedName = null;
   reportScore(engine.score);
   document.getElementById('gameover-reason').textContent =
-    engine.gameOverReason === 'FUEL_EMPTY' ? '연료 소진' : '충돌 발생';
+    engine.gameOverReason === 'FUEL_EMPTY' ? '체력 소진' : '충돌 발생';
   document.getElementById('gameover-score').textContent = `SCORE ${engine.score}`;
   document.getElementById('gameover-best').textContent =
     engine.score >= state.highScore ? 'NEW BEST!' : `BEST ${state.highScore}`;
   document.getElementById('gameover-stats').textContent =
-    `생존 ${Math.floor(engine.elapsedSeconds)}초 · 근접 회피 ${engine.nearMissCount}회 · 연료 ${engine.fuelCollected}개`;
+    `생존 ${Math.floor(engine.elapsedSeconds)}초 · 근접 회피 ${engine.nearMissCount}회 · 생수 ${engine.fuelCollected}병`;
   document.getElementById('gameover-plays').textContent = `오늘 ${recordPlayAndGetToday()}번째 판`;
   document.getElementById('gameover-top').textContent = '';
 

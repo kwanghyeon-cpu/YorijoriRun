@@ -497,7 +497,9 @@ class HighwayEngine(
         const val NEAR_MISS_MARGIN = 0.10f
         const val NEAR_MISS_FLASH_SECONDS = 0.9f
 
-        // Fuel and pickups (the drain is gentle: pickups sit in lanes you also have to dodge in).
+        // "Fuel" is the runner's stamina (체력 on screen) and FUEL pickups are water bottles; the names stay
+        // from Lane Dash so the two engines and their tests line up. Fuel and pickups (the drain is gentle:
+        // pickups sit in lanes you also have to dodge in).
         const val MAX_FUEL = 100f
         const val FUEL_DRAIN_PER_SECOND = 3.5f
         const val FUEL_REFILL_AMOUNT = 26f

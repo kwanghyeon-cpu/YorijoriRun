@@ -35,9 +35,9 @@ function drawFittedSprite(ctx, img, centerX, centerY, boxWidth, boxHeight) {
   ctx.drawImage(img, left, top, drawWidth, drawHeight);
 }
 
-// Pickups are Phosphor glyphs (icons.js) on a dark badge with a colored ring — flat, legible at
+// Pickups are icon glyphs (icons.js) on a dark badge with a colored ring — flat, legible at
 // small sizes, and told apart at a glance by ring color. Mirrors drawItemBadge in GameArt.kt.
-const FUEL_ITEM_COLOR = '#FFA23C';
+const WATER_ITEM_COLOR = '#3DDC97';
 const SHIELD_ITEM_COLOR = '#4DA3FF';
 const MAGNET_ITEM_COLOR = '#E63946';
 
@@ -54,7 +54,8 @@ function drawItemBadge(ctx, glyph, cx, cy, radius, color) {
   drawIconGlyph(ctx, glyph, cx, cy, radius * 1.15, color);
 }
 
-function drawFuelCanItem(ctx, cx, cy, radius) { drawItemBadge(ctx, 'fuelCan', cx, cy, radius, FUEL_ITEM_COLOR); }
+// Stamina refill pickup: a water bottle (the engine still calls stamina "fuel").
+function drawWaterBottleItem(ctx, cx, cy, radius) { drawItemBadge(ctx, 'waterBottle', cx, cy, radius, WATER_ITEM_COLOR); }
 function drawShieldItem(ctx, cx, cy, radius) { drawItemBadge(ctx, 'shield', cx, cy, radius, SHIELD_ITEM_COLOR); }
 function drawMagnetItem(ctx, cx, cy, radius) { drawItemBadge(ctx, 'magnet', cx, cy, radius, MAGNET_ITEM_COLOR); }
 
@@ -71,7 +72,7 @@ function drawShieldBubble(ctx, cx, cy, rx, ry, alpha) {
   ctx.restore();
 }
 
-/** Dashed ring around the player while the fuel magnet is active; `phase` animates it. */
+/** Dashed ring around the player while the magnet is active; `phase` animates it. */
 function drawMagnetAura(ctx, cx, cy, rx, ry, phase) {
   ctx.save();
   ctx.strokeStyle = 'rgba(255,90,110,0.85)';

@@ -54,3 +54,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+## Material Symbols — water bottle icon
+
+The water bottle pickup and stamina HUD icon ("water-bottle", generated into `GameIcons.kt` /
+`web/js/icons.js` by `tools/gen-icons.mjs`) is from Material Symbols by Google
+(https://github.com/google/material-design-icons), used under the Apache License 2.0
+(https://www.apache.org/licenses/LICENSE-2.0).

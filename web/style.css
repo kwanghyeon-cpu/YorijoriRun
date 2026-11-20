@@ -368,7 +368,7 @@ html, body {
 .overlay-btn { justify-content: center; }
 
 /* ---------- THE RUN (portrait frame) ---------- */
-/* The fuel bar sits centered under the speed/score row (there isn't room for it between them). */
+/* The stamina (fuel) bar sits centered under the speed/score row (there isn't room for it between them). */
 #screen-game .hud-fuel { position: absolute; top: 74px; left: 50%; transform: translateX(-50%); }
 #screen-game #game-canvas { touch-action: none; }
 #screen-game .hud-toast { top: 140px; }

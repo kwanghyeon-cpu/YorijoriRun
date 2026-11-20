@@ -34,7 +34,7 @@ fun DrawScope.drawCitySkylineSprite(sprite: ImageBitmap, horizonY: Float, parall
 
 // Pickups are Phosphor glyphs (GameIcons.kt) on a dark badge with a colored ring — flat, legible
 // at small sizes, and told apart at a glance by ring color. Mirrors drawItemBadge in render.js.
-val FUEL_ITEM_COLOR = Color(0xFFFFA23C)
+val WATER_ITEM_COLOR = Color(0xFF3DDC97)
 val SHIELD_ITEM_COLOR = Color(0xFF4DA3FF)
 val MAGNET_ITEM_COLOR = Color(0xFFE63946)
 
@@ -44,13 +44,13 @@ private fun DrawScope.drawItemBadge(icon: GameIcon, center: Offset, radius: Floa
     drawGameIcon(icon, center, radius * 1.15f, color)
 }
 
-/** Fuel refill pickup. */
-fun DrawScope.drawFuelCanItem(center: Offset, radius: Float) = drawItemBadge(GameIcon.FUEL_CAN, center, radius, FUEL_ITEM_COLOR)
+/** Stamina refill pickup: a water bottle (the engine still calls stamina "fuel"). */
+fun DrawScope.drawWaterBottleItem(center: Offset, radius: Float) = drawItemBadge(GameIcon.WATER_BOTTLE, center, radius, WATER_ITEM_COLOR)
 
 /** Timed-invincibility pickup. */
 fun DrawScope.drawShieldItem(center: Offset, radius: Float) = drawItemBadge(GameIcon.SHIELD, center, radius, SHIELD_ITEM_COLOR)
 
-/** Timed fuel-magnet pickup. */
+/** Timed magnet pickup (pulls water bottles in). */
 fun DrawScope.drawMagnetItem(center: Offset, radius: Float) = drawItemBadge(GameIcon.MAGNET, center, radius, MAGNET_ITEM_COLOR)
 
 /** Translucent bubble drawn around the player while the shield is active. */
@@ -66,7 +66,7 @@ fun DrawScope.drawShieldBubble(center: Offset, radiusX: Float, radiusY: Float, a
     )
 }
 
-/** Dashed ring around the player while the fuel magnet is active; [phase] animates it. */
+/** Dashed ring around the player while the magnet is active; [phase] animates it. */
 fun DrawScope.drawMagnetAura(center: Offset, radiusX: Float, radiusY: Float, phase: Float) {
     val topLeft = Offset(center.x - radiusX, center.y - radiusY)
     val size = Size(radiusX * 2f, radiusY * 2f)
