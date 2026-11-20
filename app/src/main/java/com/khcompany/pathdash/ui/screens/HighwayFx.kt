@@ -35,7 +35,7 @@ private const val LAMP_LATERAL = 1.34f
 private const val BUSH_LATERAL = 1.62f
 
 /**
- * Lamp posts on one side and bushes on the other, alternating, scrolling past at the road's own
+ * Park lamps on one side and bushes on the other, alternating, scrolling past at the road's own
  * pace. Nothing tells you how fast you are going like objects whizzing by at the edge.
  * Call before the road haze so far ones fade into it.
  */
@@ -66,15 +66,13 @@ internal fun DrawScope.drawRoadside(
         val postW = maxOf(1f, hw * 0.035f)
         // Posts and bushes shrink with distance faster than the (wide) far road does.
         val objScale = 0.35f + 0.65f * t
-        val postH = hw * 1.5f * objScale
+        // A short park lamp: a post with a round globe on top (no arm reaching over the path).
+        val postH = hw * 0.9f * objScale
         val lampX = cx + lampSide * LAMP_LATERAL * hw
         batch.posts.addRect(Rect(lampX - postW / 2f, y - postH, lampX + postW / 2f, y))
-        // The arm reaches over the road, with the light at its tip.
-        val armLen = hw * 0.26f
-        val armEndX = lampX - lampSide * armLen
-        batch.posts.addRect(Rect(minOf(lampX, armEndX), y - postH, maxOf(lampX, armEndX), y - postH + postW))
-        val lampW = hw * 0.11f * objScale
-        batch.lamps.addRect(Rect(armEndX - lampW / 2f, y - postH + postW, armEndX + lampW / 2f, y - postH + postW * 2.2f))
+        val globeR = maxOf(1f, hw * 0.06f * objScale)
+        val globeY = y - postH - globeR * 0.6f
+        batch.lamps.addOval(Rect(lampX - globeR, globeY - globeR, lampX + globeR, globeY + globeR))
 
         val bushR = hw * 0.16f * objScale
         val bushX = cx - lampSide * BUSH_LATERAL * hw

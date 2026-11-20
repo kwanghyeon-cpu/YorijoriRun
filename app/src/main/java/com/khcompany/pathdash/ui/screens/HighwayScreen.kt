@@ -126,8 +126,9 @@ private const val LEVEL_UP_SECONDS = 3f
 /** Pickup badge radius, in road half-widths at the same depth. */
 private const val ITEM_RADIUS = 0.17f
 private val ROAD_GRASS = Color(0xFF2E7D32)
-private val RUMBLE_RED = Color(0xFFC4343A)
-private val RUMBLE_WHITE = Color(0xFFD8D8D8)
+// The path's edge is a pale stone curb in two shades (Lane Dash had red-and-white racing kerbs).
+private val CURB_SHADE = Color(0xFFB9B0A1)
+private val CURB_LIGHT = Color(0xFFDCD5C8)
 
 /**
  * The game: a behind-the-car "OutRun" road. Lane buttons (or a sideways swipe) move one lane per
@@ -290,8 +291,8 @@ fun HighwayScreen(
                 }
             }
             drawPath(darkGrass, grassDark)
-            drawPath(rumbleRed, RUMBLE_RED)
-            drawPath(rumbleWhite, RUMBLE_WHITE)
+            drawPath(rumbleRed, CURB_SHADE)
+            drawPath(rumbleWhite, CURB_LIGHT)
             drawPath(roadLight, lerp(city.roadColor, Color.White, 0.10f))
             drawPath(roadDark, lerp(city.roadColor, Color.White, 0.05f))
             drawPath(laneMarksFar, city.roadLineColor.copy(alpha = 0.4f))

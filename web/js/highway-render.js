@@ -12,8 +12,9 @@ const HW_DASH_FRACTION = 0.33;
 const HW_DASH_FADE_DISTANCE = 14;
 const HW_GRASS = '#2E7D32';
 const HW_GRASS_DARK = '#276B2A';
-const HW_RUMBLE_RED = '#C4343A';
-const HW_RUMBLE_WHITE = '#D8D8D8';
+// The path's edge is a pale stone curb in two shades (Lane Dash had red-and-white racing kerbs).
+const HW_CURB_LIGHT = '#DCD5C8';
+const HW_CURB_SHADE = '#B9B0A1';
 /** Scale applied to the road layer so its vibration never exposes an empty edge. */
 const HW_SHAKE_ZOOM = 1.02;
 const HW_MAX_LEAN_DEGREES = 4;
@@ -37,7 +38,7 @@ const HW_LAMP_LATERAL = 1.34;
 const HW_BUSH_LATERAL = 1.62;
 
 /**
- * Lamp posts on one side and bushes on the other, alternating, scrolling past at the road's own
+ * Park lamps on one side and bushes on the other, alternating, scrolling past at the road's own
  * pace — nothing tells you how fast you are going like objects whizzing by at the edge. Drawn
  * before the road haze so far ones fade into it.
  */
@@ -61,14 +62,13 @@ function drawHighwayRoadside(ctx, w, h, cameraZ, horizonY, rowH, city) {
     const postW = Math.max(1, hw * 0.035);
     // Posts and bushes shrink with distance faster than the (wide) far road does.
     const objScale = 0.35 + 0.65 * t;
-    const postH = hw * 1.5 * objScale;
+    // A short park lamp: a post with a round globe on top (no arm reaching over the path).
+    const postH = hw * 0.9 * objScale;
     const lampX = cx + lampSide * HW_LAMP_LATERAL * hw;
     posts.rect(lampX - postW / 2, y - postH, postW, postH);
-    // The arm reaches over the road, with the light at its tip.
-    const armEndX = lampX - lampSide * hw * 0.26;
-    posts.rect(Math.min(lampX, armEndX), y - postH, Math.abs(armEndX - lampX), postW);
-    const lampW = hw * 0.11 * objScale;
-    lamps.rect(armEndX - lampW / 2, y - postH + postW, lampW, postW * 1.2);
+    const globeR = Math.max(1, hw * 0.06 * objScale);
+    lamps.moveTo(lampX + globeR, y - postH - globeR * 0.6);
+    lamps.arc(lampX, y - postH - globeR * 0.6, globeR, 0, Math.PI * 2);
 
     const bushR = hw * 0.16 * objScale;
     const bushX = cx - lampSide * HW_BUSH_LATERAL * hw;
@@ -214,9 +214,9 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   }
   ctx.fillStyle = mixHex(HW_GRASS_DARK, city.haze, 0.2);
   ctx.fill(darkGrass);
-  ctx.fillStyle = HW_RUMBLE_RED;
+  ctx.fillStyle = HW_CURB_SHADE;
   ctx.fill(rumbleRed);
-  ctx.fillStyle = HW_RUMBLE_WHITE;
+  ctx.fillStyle = HW_CURB_LIGHT;
   ctx.fill(rumbleWhite);
   ctx.fillStyle = mixHex(city.roadColor, '#FFFFFF', 0.10);
   ctx.fill(roadLight);
