@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Path Dash</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="style.css?v=19" />
+</head>
+<body>
+
+  <!-- Bounded "device" frame: sized in JS (see resizeAppFrame in main.js) to a mobile
+       portrait aspect/size instead of stretching across the whole browser window. -->
+  <div id="app-frame" class="portrait">
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="home-content">
+        <h1 class="title">PATH<br/>DASH</h1>
+        <p class="subtitle">도시를 달리는 레트로 차선 러너</p>
+        <p id="home-best" class="best-text"></p>
+        <button id="btn-play" class="btn btn-primary btn-big">PLAY</button>
+      </div>
+    </section>
+
+    <!-- CITY SELECT -->
+    <section id="screen-city" class="screen">
+      <div class="select-header">
+        <h2>도시 선택</h2>
+      </div>
+      <div id="city-grid" class="card-grid"></div>
+      <button id="btn-city-next" class="btn btn-primary btn-wide">다음: 자동차 선택</button>
+    </section>
+
+    <!-- CAR SELECT -->
+    <section id="screen-car" class="screen">
+      <div class="select-header">
+        <h2>자동차 선택</h2>
+      </div>
+      <div id="car-grid" class="card-grid"></div>
+      <button id="btn-car-start" class="btn btn-primary btn-wide">게임 시작</button>
+    </section>
+
+    <!-- GAME -->
+    <section id="screen-game" class="screen">
+      <canvas id="game-canvas"></canvas>
+
+      <div class="hud">
+        <div class="hud-left">
+          <div class="hud-speed"><span data-icon="gauge"></span><span id="hud-speed-text">0 KM/H</span></div>
+          <div id="hud-shield" class="hud-powerup hud-shield hidden"><span data-icon="shield"></span><span class="hud-powerup-text"></span></div>
+          <div id="hud-magnet" class="hud-powerup hud-magnet hidden"><span data-icon="magnet"></span><span class="hud-powerup-text"></span></div>
+        </div>
+        <div class="hud-fuel">
+          <div class="hud-fuel-label"><span data-icon="gasPump"></span>FUEL</div>
+          <div class="fuel-track"><div id="fuel-bar" class="fuel-bar"></div></div>
+        </div>
+        <div class="hud-score">
+          <div id="hud-score" class="hud-score-value">SCORE 0</div>
+          <div id="hud-best" class="hud-best-value">BEST 0</div>
+        </div>
+      </div>
+
+      <div id="hud-toast" class="hud-toast"></div>
+
+      <div class="hw-controls">
+        <button id="btn-lane-left" class="lane-btn hw-btn" aria-label="왼쪽 차선"><span data-icon="caretLeft"></span></button>
+        <button id="btn-lane-right" class="lane-btn hw-btn" aria-label="오른쪽 차선"><span data-icon="caretRight"></span></button>
+      </div>
+      <button id="btn-pause" class="lane-btn pause-btn" aria-label="일시정지"><span data-icon="pause"></span></button>
+      <p class="controls-hint">← / → 키나 버튼으로 한 차선씩 이동, P 키로 일시정지</p>
+
+      <div id="pause-overlay" class="overlay hidden">
+        <div class="pause-card">
+          <h2 class="pause-title">일시정지</h2>
+          <button id="btn-resume" class="btn btn-primary overlay-btn"><span data-icon="play"></span>계속하기</button>
+          <div class="overlay-btn-row">
+            <button id="btn-pause-restart" class="btn btn-secondary"><span data-icon="retry"></span>다시 시작</button>
+            <button id="btn-pause-home" class="btn btn-secondary"><span data-icon="home"></span>HOME</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="gameover-overlay" class="overlay hidden">
+        <div class="overlay-card">
+          <div class="overlay-col overlay-col-info">
+            <h2 class="gameover-title">GAME OVER</h2>
+            <p id="gameover-reason" class="gameover-reason"></p>
+            <p id="gameover-score" class="gameover-score"></p>
+            <p id="gameover-best" class="gameover-best"></p>
+            <p id="gameover-stats" class="gameover-stat"></p>
+            <p id="gameover-plays" class="gameover-stat"></p>
+            <p id="gameover-top" class="gameover-stat gameover-top"></p>
+          </div>
+          <div class="overlay-col overlay-col-actions">
+            <div id="gameover-qualify" class="qualify-block hidden">
+              <p class="qualify-badge"><span data-icon="trophy"></span>TOP 10 진입!</p>
+              <input id="score-name-input" class="name-input" type="text" maxlength="12" placeholder="이름 입력" />
+              <button id="btn-submit-score" class="btn btn-primary overlay-btn">등록하기</button>
+            </div>
+            <div class="overlay-btn-row">
+              <button id="btn-view-leaderboard" class="btn btn-secondary"><span data-icon="ranking"></span>순위표</button>
+              <button id="btn-share" class="btn btn-secondary"><span data-icon="share"></span><span class="btn-label">공유하기</span></button>
+            </div>
+            <div class="overlay-btn-row">
+              <button id="btn-retry" class="btn btn-primary"><span data-icon="retry"></span>RETRY</button>
+              <button id="btn-gameover-home" class="btn btn-secondary"><span data-icon="home"></span>HOME</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="screen-leaderboard" class="screen">
+      <div class="select-header">
+        <h2>TOP 10</h2>
+        <p class="leaderboard-subtitle">전체 순위</p>
+      </div>
+      <div id="leaderboard-list" class="leaderboard-list"></div>
+      <button id="btn-leaderboard-home" class="btn btn-primary btn-wide">홈으로</button>
+    </section>
+
+    <!-- SOUND SETTINGS (accessible from any screen) -->
+    <button id="btn-settings" class="settings-btn" aria-label="사운드 설정"><span data-icon="gear"></span></button>
+    <div id="settings-panel" class="settings-panel hidden">
+      <div class="settings-card">
+        <h3>사운드 설정</h3>
+        <label class="settings-row">
+          <span>배경음악</span>
+          <input id="bgm-volume" type="range" min="0" max="100" step="1" />
+          <span id="bgm-volume-value" class="settings-value">85</span>
+        </label>
+        <label class="settings-row">
+          <span>효과음</span>
+          <input id="sfx-volume" type="range" min="0" max="100" step="1" />
+          <span id="sfx-volume-value" class="settings-value">100</span>
+        </label>
+        <label class="settings-row">
+          <span><span data-icon="vibrate"></span>진동</span>
+          <input id="vibration-toggle" type="checkbox" />
+          <span class="settings-hint">모바일 브라우저에서만 동작</span>
+        </label>
+        <button id="btn-settings-close" class="btn btn-primary btn-wide">닫기</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/catalog.js?v=15"></script>
+  <script src="js/icons.js?v=2"></script>
+  <!-- Same Firebase project as the Android app (lanedash-2cc5d), so scores set here land
+       in the same shared "scores" collection / leaderboard. -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/leaderboard.js?v=3"></script>
+  <script src="js/audio.js?v=7"></script>
+  <script src="js/art.js?v=1"></script>
+  <script src="js/highway-engine.js?v=16"></script>
+  <script src="js/highway-render.js?v=13"></script>
+  <script src="js/main.js?v=22"></script>
+</body>
+</html>
