@@ -76,7 +76,7 @@ Play Console의 **스토어 등록정보** 화면에 그대로 붙여 넣을 수
 |---|---|---|
 | 앱 아이콘 | 512×512 PNG | `design/icon/store_icon_512.png` |
 | 휴대전화 스크린샷 | 1080×1920, 2~8장 | `store-assets/screenshots-0.1/01_gameplay.png` ~ `07_gameover.png` (7장, `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`로 다시 만들 수 있음) |
-| 그래픽 이미지(피처 그래픽) | 1024×500 | **아직 없음.** 필요하면 타이틀 그림으로 만들 수 있어요 |
+| 그래픽 이미지(피처 그래픽) | 1024×500 | `design/icon/feature_graphic.png` (타이틀 그림의 하늘·산책로 + 탈것 4종 + 로고. `node design/title-icon/make-feature-graphic.cjs`로 다시 만들 수 있음) |
 
 ## 연락처·개인정보
 

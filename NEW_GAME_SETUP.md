@@ -31,7 +31,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 4. **Play Console**: 새 앱 만들기, 스토어 등록정보, 콘텐츠 등급, 개인정보처리방침 주소.
    스토어 문구·카테고리·콘텐츠 등급·데이터 보안 답변 초안은 `store-listing.md`, 스크린샷 7장은 `store-assets/screenshots-0.1/`
    (커밋 안 함, 도구로 다시 만들 수 있음), 개인정보처리방침은 `privacy-policy.md`(2026-11-20 새 앱 기준으로 고침).
-   피처 그래픽(1024×500)은 아직 없음.
+   피처 그래픽(1024×500)은 `design/icon/feature_graphic.png`(`node design/title-icon/make-feature-graphic.cjs`).
    개인 개발자 계정은 새 앱마다 비공개 테스트 요건이 있을 수 있으니 콘솔에서 확인.
 5. **서명**: 릴리스 서명은 `keystore.properties`(커밋 안 됨)로 합니다. Lane Dash의 업로드 키를 재사용해도 되고 새로 만들어도 됩니다.
 6. **GitHub / 웹**: 새 저장소를 만들어 푸시하고 Pages를 켜면 공유 링크(`WEB_PLAY_URL`)가 살아납니다.
