@@ -31,9 +31,9 @@ enum class TrafficKind(
     val maxSpeed: Float,
     val spriteName: String,
 ) {
-    SEDAN(0.12f, 2.46f, 9f, 13f, "traffic_rear_sedan"),
-    SUV(0.22f, 1.24f, 8.5f, 12.5f, "traffic_rear_suv"),
-    BUS(0.24f, 1.02f, 7f, 10.5f, "traffic_rear_bus"),
+    SEDAN(0.12f, 2.45f, 9f, 13f, "traffic_rear_sedan"),
+    SUV(0.22f, 1.39f, 8.5f, 12.5f, "traffic_rear_suv"),
+    BUS(0.24f, 1.06f, 7f, 10.5f, "traffic_rear_bus"),
     TRUCK(0.18f, 1.62f, 6f, 9.5f, "traffic_rear_truck"),
     CONE(0.09f, 1.2f, 0f, 0f, "hw_cone"),
     BARRIER(0.17f, 0.43f, 0f, 0f, "hw_barrier"),

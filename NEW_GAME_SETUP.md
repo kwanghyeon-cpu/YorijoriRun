@@ -46,12 +46,14 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 
 | 파일 | 내용 | 상태 |
 |---|---|---|
-| `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·배달 카트·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
+| `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·인라인·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
 | `traffic_rear_*.png` (움직이는 장애물 4칸) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 | 교체함 |
 | `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘 | 교체함 |
-| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 (2026-11-20 두 번째: 배달 카트, 차선 없는 길) |
+| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 (2026-11-20 두 번째: 배달 카트, 차선 없는 길). 3번 탈것이 인라인으로 바뀌어 그림 속 배달 카트가 맞지 않음 → **다시 받기로 함** (프롬프트는 인라인으로 고쳐 둠) |
+| `car_rear_3_frames.png` → `car_rear_3.png`·`_b.png` | 인라인스케이트 2프레임 (프롬프트: `design/sprites/gemini-prompts.md` 7절) | 넣음 (2026-11-20, 왼발·오른발 밀기 2프레임) |
 | `title_logo.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | "요리조리 런" 로고, 지그재그 화살표가 "런"으로 들어가는 C3 시안 (`design/title-icon/logo.html`) | 새로 넣음 |
 | `ic_launcher_foreground.png`, `design/icon/store_icon_512.png` | 요리조리 피하는 러너 아이콘 (배경 층은 보라색 그라데이션 그대로) | 교체함 |
+| 2프레임 `*_b.png` 7장 (조깅·자전거·인라인·킥보드·자전거 탄 사람·강아지 산책·러닝 크루) | 걸음·페달 박자에 맞춰 번갈아 보이는 두 번째 프레임 | 넣음 (2026-11-20). 새 그림에서 조깅이 짧은 머리로, 내 자전거·킥보드에 백팩이 생겨 타이틀·아이콘(포니테일 러너)과 조금 다름. 내 자전거가 장애물 자전거와 비슷해 보임 |
 | `city_*.png` | 길 건너편 도시 | 그대로 씀 |
 | 효과음 7개 (`res/raw`, `web/assets/sfx`, `web/assets/bgm`) | `design/sounds/synth-sounds.cjs`로 직접 합성한 칩튠 소리(라이선스 필요 없음) | 교체함 |
 
@@ -65,6 +67,6 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
   `SOUND_VERSION`을 올립니다. 무료 사이트 소리로 바꾸려면 `design/sounds/README.md`(고르기 가이드)와 `make-sounds.cjs`를 씁니다.
 
 코드 쪽 남은 일: 없음(그림·소리 교체도 끝남).
-(문구 정리·속도계도 끝남. 탈것 이름은 조깅·자전거·배달 카트(처음엔 리어카)·킥보드, 속도계는 15~25 km/h, 게임오버는 "부딪혔어요".)
+(문구 정리·속도계도 끝남. 탈것 이름은 조깅·자전거·인라인(리어카 → 배달 카트 → 인라인)·킥보드, 속도계는 15~25 km/h, 게임오버는 "부딪혔어요".)
 (도로 → 산책로는 끝남. 도시별 길 색: 서울 적갈색 우레탄, 도쿄 남색, 뉴욕 회청색, 파리 모래색. 연석은 회색 경계석, 가로등은 낮은 공원 등. 차선 점선은 없앴다(5칸 이동은 게임 규칙에만 있음).)
 (연료 → 체력(생수병)은 끝남. 화면 문구·아이콘·게이지만 바꿨고 엔진 이름 `fuel`은 그대로다. `sfx_fuel_low` 경고음도 새 "삐삐" 소리로 바꿨다.)

@@ -101,9 +101,9 @@ object GameCatalog {
             rearSpriteName = "car_rear_2",
         ),
         CarOption(
-            id = "cart",
-            displayName = "배달 카트",
-            englishName = "DELIVERY CART",
+            id = "inline",
+            displayName = "인라인",
+            englishName = "INLINE SKATES",
             bodyColor = Color(0xFF3D8BFF),
             roofColor = Color(0xFF1A2340),
             rearSpriteName = "car_rear_3",

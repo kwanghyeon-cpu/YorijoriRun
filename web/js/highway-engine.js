@@ -152,9 +152,9 @@ function skylineScroll(strips, screenWidth) {
  * CONE = traffic cone, BARRIER = pothole (the names stay from Lane Dash).
  */
 const TRAFFIC_KINDS = {
-  SEDAN: { name: 'SEDAN', drawHalfWidth: 0.12, heightFactor: 2.46, minSpeed: 9, maxSpeed: 13, sprite: 'assets/rear/traffic_rear_sedan.png', color: '#8D99AE' },
-  SUV: { name: 'SUV', drawHalfWidth: 0.22, heightFactor: 1.24, minSpeed: 8.5, maxSpeed: 12.5, sprite: 'assets/rear/traffic_rear_suv.png', color: '#5C6478' },
-  BUS: { name: 'BUS', drawHalfWidth: 0.24, heightFactor: 1.02, minSpeed: 7, maxSpeed: 10.5, sprite: 'assets/rear/traffic_rear_bus.png', color: '#A7AFBF' },
+  SEDAN: { name: 'SEDAN', drawHalfWidth: 0.12, heightFactor: 2.45, minSpeed: 9, maxSpeed: 13, sprite: 'assets/rear/traffic_rear_sedan.png', color: '#8D99AE' },
+  SUV: { name: 'SUV', drawHalfWidth: 0.22, heightFactor: 1.39, minSpeed: 8.5, maxSpeed: 12.5, sprite: 'assets/rear/traffic_rear_suv.png', color: '#5C6478' },
+  BUS: { name: 'BUS', drawHalfWidth: 0.24, heightFactor: 1.06, minSpeed: 7, maxSpeed: 10.5, sprite: 'assets/rear/traffic_rear_bus.png', color: '#A7AFBF' },
   TRUCK: { name: 'TRUCK', drawHalfWidth: 0.18, heightFactor: 1.62, minSpeed: 6, maxSpeed: 9.5, sprite: 'assets/rear/traffic_rear_truck.png', color: '#7F8CA8' },
   CONE: { name: 'CONE', drawHalfWidth: 0.09, heightFactor: 1.2, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_cone.png', color: '#FF7A1A' },
   BARRIER: { name: 'BARRIER', drawHalfWidth: 0.17, heightFactor: 0.43, minSpeed: 0, maxSpeed: 0, sprite: 'assets/rear/hw_barrier.png', color: '#FFE03A' },

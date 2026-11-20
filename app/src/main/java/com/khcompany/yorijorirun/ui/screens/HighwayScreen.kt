@@ -156,6 +156,9 @@ fun HighwayScreen(
     var skyline by remember { mutableStateOf<ImageBitmap?>(null) }
     var playerSprite by remember { mutableStateOf<ImageBitmap?>(null) }
     var trafficSprites by remember { mutableStateOf<Map<TrafficKind, ImageBitmap?>>(emptyMap()) }
+    // Second animation frames ("<name>_b"), for the riders that have one; null otherwise.
+    var playerSpriteB by remember { mutableStateOf<ImageBitmap?>(null) }
+    var trafficSpritesB by remember { mutableStateOf<Map<TrafficKind, ImageBitmap?>>(emptyMap()) }
     var ready by remember { mutableStateOf(false) }
 
     // Reused every frame: one batched path per color instead of hundreds of separate rects.
@@ -187,6 +190,8 @@ fun HighwayScreen(
         skyline = SpriteCache.load(context, city.spriteName)
         playerSprite = SpriteCache.load(context, car.rearSpriteName)
         trafficSprites = TrafficKind.entries.associateWith { SpriteCache.load(context, it.spriteName) }
+        playerSpriteB = SpriteCache.load(context, car.rearSpriteName + "_b")
+        trafficSpritesB = TrafficKind.entries.associateWith { SpriteCache.load(context, it.spriteName + "_b") }
         ready = true
         engine.start()
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -352,7 +357,8 @@ fun HighwayScreen(
                             trafficCadence(traffic.speed),
                             motionPhase(traffic.id),
                         )
-                        drawRearSprite(trafficSprite, cx = cx, bottomY = y, width = width, pose = pose)
+                        val frame = if (pose.frame == 1) trafficSpritesB[traffic.kind] ?: trafficSprite else trafficSprite
+                        drawRearSprite(frame, cx = cx, bottomY = y, width = width, pose = pose)
                     } else {
                         val (body, roof) = trafficColors(traffic.kind)
                         drawRearCar(cx, y, width, traffic.kind.heightFactor, body, roof)
@@ -373,18 +379,19 @@ fun HighwayScreen(
             ) * playerHalf
             val playerHeight = playerWidth * playerAspect
             if (sprite != null) {
+                val pose = riderPose(
+                    motionStyleForRide(car.id),
+                    engine.elapsedSeconds,
+                    playerCadence(engine.speed / HighwayEngine.MAX_SPEED),
+                    0f,
+                )
                 drawRearSprite(
-                    sprite,
+                    if (pose.frame == 1) playerSpriteB ?: sprite else sprite,
                     cx = playerCx,
                     bottomY = playerY,
                     width = playerWidth,
                     leanDegrees = engine.steerLean * MAX_LEAN_DEGREES,
-                    pose = riderPose(
-                        motionStyleForRide(car.id),
-                        engine.elapsedSeconds,
-                        playerCadence(engine.speed / HighwayEngine.MAX_SPEED),
-                        0f,
-                    ),
+                    pose = pose,
                 )
             } else {
                 drawRearCar(

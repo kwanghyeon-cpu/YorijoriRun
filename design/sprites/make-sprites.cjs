@@ -22,7 +22,7 @@ const DESTS = dry
 const SPRITES = {
   car_rear_1: 384, // 조깅
   car_rear_2: 384, // 자전거
-  car_rear_3: 384, // 배달 카트
+  car_rear_3: 384, // 인라인 (처음엔 리어카, 그다음 배달 카트)
   car_rear_4: 384, // 킥보드
   traffic_rear_sedan: 332, // 자전거 탄 사람
   traffic_rear_suv: 332, // 강아지 산책
@@ -32,6 +32,20 @@ const SPRITES = {
   hw_cone: 357, // 라바콘
 };
 const EXTS = ['.png', '.webp', '.jpg', '.jpeg'];
+/**
+ * Riders whose Gemini second frame came back with (some) legs unchanged. From behind, flipping a
+ * pair of legs left-to-right swaps the forward and the kicked-up foot.
+ *   { from }        frame 2 = frame 1 with everything below `from` (share of the height) flipped;
+ *                   head and torso stay exactly the same, so nothing flickers.
+ *   { from, cols }  for a group: keep Gemini's frame 2, but replace each listed column (shares of
+ *                   the width, centered on one person) below `from` with frame 1's legs there,
+ *                   flipped in place — only the people whose legs didn't change.
+ */
+const MIRROR_LEGS = {
+  car_rear_1: { from: 0.56 }, // 조깅: cut through the middle of the shorts
+  // 러닝 크루: the middle and right runners kicked the same foot in both frames; the left one is fine.
+  traffic_rear_bus: { from: 0.63, cols: [[0.398, 0.6], [0.702, 0.916]] },
+};
 // How far from pure magenta still counts as background. Gemini's "flat" color drifts a little.
 const FUZZ = '22%';
 /** Islands smaller than this share of the image area are dropped (Gemini's sparkle mark, specks). */
@@ -84,16 +98,36 @@ function removeGroundLine(maskFile, W, H) {
   if (above >= runOf(lineBottom).best * 0.6) return;
   magick(maskFile, '-fill', 'black', '-draw', `rectangle 0,${top - 1} ${W},${bottom}`, maskFile);
 }
-let done = 0;
-for (const [name, width] of Object.entries(SPRITES)) {
-  const ext = EXTS.find((e) => fs.existsSync(path.join(SRC, name + e)));
-  if (!ext) continue;
-  const src = path.join(SRC, name + ext);
-  const out = path.join(DESTS[0], name + '.png');
-  const keyed = path.join(os.tmpdir(), `yorijorirun-sprite-${name}.png`);
-  const mask = path.join(os.tmpdir(), `yorijorirun-sprite-${name}-mask.png`);
+/**
+ * Gemini's sparkle mark sits in the bottom-right corner. On a large original it is bigger than the
+ * SPECK cut-off, so any opaque island lying entirely inside that corner (the last CORNER share of
+ * the width and height) is cleared too; the subject itself never fits inside the corner.
+ */
+const CORNER = 0.12;
+function removeCornerMark(maskFile, W, H) {
+  const out = execFileSync('magick', [maskFile, '-define', 'connected-components:verbose=true',
+    '-connected-components', '8', 'null:'], { maxBuffer: 1 << 26 }).toString();
+  for (const line of out.split('\n')) {
+    // e.g. "  12: 40x38+2410+1460 2430.1,1479.2 1180 gray(255)"
+    const m = line.match(/^\s*\d+:\s+(\d+)x(\d+)\+(\d+)\+(\d+)\s.*(gray\(255\)|white|srgb\(255,255,255\))/);
+    if (!m) continue;
+    const [w, h, x, y] = m.slice(1, 5).map(Number);
+    if (x >= W * (1 - CORNER) && y >= H * (1 - CORNER) && w < W * CORNER && h < H * CORNER) {
+      magick(maskFile, '-fill', 'black', '-draw', `rectangle ${x},${y} ${x + w},${y + h}`, maskFile);
+    }
+  }
+}
+
+/**
+ * Keys the magenta out of `src` (optionally only a `crop` of it), drops specks and Gemini's sparkle,
+ * removes a drawn ground line, and trims to the subject. Returns the trimmed PNG's path.
+ */
+function cutOut(src, tag, crop) {
+  const keyed = path.join(os.tmpdir(), `yorijorirun-sprite-${tag}.png`);
+  const mask = path.join(os.tmpdir(), `yorijorirun-sprite-${tag}-mask.png`);
+  const cut = path.join(os.tmpdir(), `yorijorirun-sprite-${tag}-cut.png`);
   magick(
-    src, '-alpha', 'set',
+    src, ...(crop ? ['-crop', crop, '+repage'] : []), '-alpha', 'set',
     // Every magenta-ish pixel goes transparent (the prompt keeps magenta off the subject, so this
     // also clears the gaps between legs, spokes and handles that a flood fill would miss).
     '-fuzz', FUZZ, '-transparent', '#FF00FF',
@@ -107,24 +141,105 @@ for (const [name, width] of Object.entries(SPRITES)) {
   magick(keyed, '-alpha', 'extract', '-threshold', '50%',
     '-define', `connected-components:area-threshold=${Math.round(W * H * SPECK)}`,
     '-define', 'connected-components:mean-color=true', '-connected-components', '8', mask);
+  removeCornerMark(mask, W, H);
   removeGroundLine(mask, W, H);
-  magick(keyed, mask, '-compose', 'CopyOpacity', '-composite',
-    '-trim', '+repage',
-    '-resize', `${width}x`,
-    '-strip', '-define', 'png:compression-level=9', out);
+  magick(keyed, mask, '-compose', 'CopyOpacity', '-composite', '-trim', '+repage', cut);
   fs.rmSync(keyed); fs.rmSync(mask);
-  // Edge pixels that still carry a pink tint (JPEG and soft edges bleed the background in) take the
-  // cream outline color instead. Safe because the prompt keeps pink off the subject.
-  // The cream patch is opaque: a see-through one would let the pink under a soft edge show through.
-  magick(out, '(', '+clone', '-alpha', 'off', '-fill', OUTLINE, '-colorize', '100', ')', '(', '-clone', '0', '-fx', `a>0.2 && ${PINKISH}`, '-alpha', 'off', ')',
-    '-composite', '-strip', '-define', 'png:compression-level=9', out);
-  for (const d of DESTS.slice(1)) fs.copyFileSync(out, path.join(d, name + '.png'));
+  return cut;
+}
 
-  const [w, h] = magick('identify', '-format', '%w %h', out).split(' ').map(Number);
+/** Pink-tinted edge pixels take the cream outline color, then the PNG is written compactly. */
+function finish(file) {
+  // JPEG and soft edges bleed the background into the rim. Safe because the prompt keeps pink off
+  // the subject; the cream patch is opaque so no pink shows through a soft edge.
+  magick(file, '(', '+clone', '-alpha', 'off', '-fill', OUTLINE, '-colorize', '100', ')', '(', '-clone', '0', '-fx', `a>0.2 && ${PINKISH}`, '-alpha', 'off', ')',
+    '-composite', '-strip', '-define', 'png:compression-level=9', file);
+}
+
+function report(name, src, file) {
+  const [w, h] = magick('identify', '-format', '%w %h', file).split(' ').map(Number);
   // Leftover pink: opaque pixels that are still strongly magenta point at a background the fuzz missed.
-  const pink = Number(magick(out, '-fx', `a>0.5 && ${PINKISH}`, '-format', '%[fx:mean*w*h]', 'info:'));
+  const pink = Number(magick(file, '-fx', `a>0.5 && ${PINKISH}`, '-format', '%[fx:mean*w*h]', 'info:'));
   const warn = pink > w * h * 0.002 ? `  ← 분홍 픽셀 ${Math.round(pink)}개 남음, 배경색 확인` : '';
   console.log(`${name}: ${path.basename(src)} -> ${w}x${h} (세로/가로 ${(h / w).toFixed(2)})${warn}`);
-  done++;
+}
+
+const copyOut = (file, outName) => { for (const d of DESTS.slice(1)) fs.copyFileSync(file, path.join(d, outName)); };
+const removeFrameB = (name) => { for (const d of DESTS) fs.rmSync(path.join(d, `${name}_b.png`), { force: true }); };
+
+let done = 0;
+for (const [name, width] of Object.entries(SPRITES)) {
+  const findSrc = (base) => { const e = EXTS.find((x) => fs.existsSync(path.join(SRC, base + x))); return e && path.join(SRC, base + e); };
+  const sheet = findSrc(`${name}_frames`);
+  const single = findSrc(name);
+  if (sheet) {
+    // Two frames side by side: cut each half out, scale both by the same factor, and stand both on
+    // one canvas anchored at the bottom center, so swapping them never shifts the feet.
+    const [W, H] = magick('identify', '-format', '%w %h', sheet).split(' ').map(Number);
+    const half = Math.floor(W / 2);
+    const a = cutOut(sheet, `${name}-a`, `${half}x${H}+0+0`);
+    const b = cutOut(sheet, `${name}-b`, `${W - half}x${H}+${half}+0`);
+    const [aw, ah] = magick('identify', '-format', '%w %h', a).split(' ').map(Number);
+    const [bw, bh] = magick('identify', '-format', '%w %h', b).split(' ').map(Number);
+    const boxW = Math.max(aw, bw), boxH = Math.max(ah, bh);
+    const scale = width / boxW;
+    const outW = width, outH = Math.round(boxH * scale);
+    const outA = path.join(DESTS[0], `${name}.png`);
+    const outB = path.join(DESTS[0], `${name}_b.png`);
+    for (const [cut, out] of [[a, outA], [b, outB]]) {
+      magick(cut, '-resize', `${Math.round(100 * scale * 1000) / 1000}%`, '-background', 'none', '-gravity', 'south',
+        '-extent', `${outW}x${outH}`, '-strip', `PNG32:${out}`);
+      finish(out);
+      fs.rmSync(cut);
+    }
+    const mirror = MIRROR_LEGS[name];
+    if (mirror && !mirror.cols) {
+      const y = Math.round(outH * mirror.from);
+      magick('(', outA, '-crop', `${outW}x${y}+0+0`, '+repage', ')',
+        '(', outA, '-crop', `${outW}x${outH - y}+0+${y}`, '+repage', '-flop', ')',
+        '-background', 'none', '-append', '+repage', '-strip', '-define', 'png:compression-level=9', `PNG32:${outB}`);
+      console.log(`  ${name}_b: 1프레임의 다리(아래 ${Math.round((1 - mirror.from) * 100)}%)를 좌우로 뒤집어 만듦`);
+    } else if (mirror) {
+      const y = Math.round(outH * mirror.from);
+      const h = outH - y;
+      for (const [l, r] of mirror.cols) {
+        const x = Math.round(outW * l), w = Math.round(outW * (r - l));
+        // Copy a fully transparent block over that region of frame 2 (Copy replaces alpha too),
+        // then lay frame 1's legs there, flipped in place.
+        magick(outB, '(', '-size', `${w}x${h}`, 'xc:none', ')', '-geometry', `+${x}+${y}`, '-compose', 'Copy', '-composite',
+          '(', outA, '-crop', `${w}x${h}+${x}+${y}`, '+repage', '-flop', ')', '-geometry', `+${x}+${y}`,
+          '-compose', 'Over', '-composite', '-strip', '-define', 'png:compression-level=9', `PNG32:${outB}`);
+      }
+      console.log(`  ${name}_b: ${mirror.cols.length}명의 다리를 1프레임에서 좌우로 뒤집어 넣음`);
+    }
+    copyOut(outA, `${name}.png`); copyOut(outB, `${name}_b.png`);
+    report(`${name} (1프레임)`, sheet, outA);
+    report(`${name}_b (2프레임)`, sheet, outB);
+    done += 2;
+    if (single) console.log(`  (${path.basename(single)}도 있지만 2프레임 그림을 썼어요)`);
+  } else if (single) {
+    const cut = cutOut(single, name);
+    const out = path.join(DESTS[0], `${name}.png`);
+    magick(cut, '-resize', `${width}x`, '-strip', out);
+    fs.rmSync(cut);
+    finish(out);
+    copyOut(out, `${name}.png`);
+    // A one-frame original replaces any earlier pair, so a stale second frame can't linger.
+    removeFrameB(name);
+    report(name, single, out);
+    done++;
+  }
+}
+
+// The web build can't ask the server which second frames exist, so it reads this generated list.
+if (!dry && done) {
+  const webRear = path.join(ROOT, 'web/assets/rear');
+  const pairs = fs.readdirSync(webRear).filter((f) => f.endsWith('_b.png')).sort()
+    .map((f) => `  'assets/rear/${f.replace('_b.png', '.png')}': 'assets/rear/${f}',`);
+  fs.writeFileSync(path.join(ROOT, 'web/js/sprite-frames.js'),
+    '// GENERATED by design/sprites/make-sprites.cjs — do not edit by hand.\n' +
+    '// Sprite path -> its second animation frame (two-frame riders; see design/sprites/gemini-prompts.md).\n' +
+    `const SPRITE_FRAME_B = {\n${pairs.join('\n')}${pairs.length ? '\n' : ''}};\n`);
+  console.log(`web/js/sprite-frames.js: 2프레임 ${pairs.length}개`);
 }
 console.log(done ? `${done}장 처리 -> ${DESTS.join(', ')}` : `처리할 그림이 없음: ${SRC}`);

@@ -12,13 +12,20 @@ import kotlin.math.sin
  * like paper cut-outs. Drawing only: the engine, hitboxes and lanes are untouched.
  * Mirrors riderPose() in the web build's highway-render.js — change both together.
  */
-internal enum class MotionStyle { RUN, BIKE, KICK, MOTOR, NONE }
+internal enum class MotionStyle { RUN, BIKE, KICK, SKATE, MOTOR, NONE }
 
 /**
  * [lift] raises the sprite by this fraction of its height; [scaleX]/[scaleY] squash it about its
- * bottom center; [tiltDegrees] rocks it about the same point.
+ * bottom center; [tiltDegrees] rocks it about the same point. [frame] picks the sprite: 0 is the
+ * main one, 1 the second animation frame ("<name>_b") when the rider has one.
  */
-internal data class RiderPose(val lift: Float, val scaleX: Float, val scaleY: Float, val tiltDegrees: Float) {
+internal data class RiderPose(
+    val lift: Float,
+    val scaleX: Float,
+    val scaleY: Float,
+    val tiltDegrees: Float,
+    val frame: Int = 0,
+) {
     companion object {
         val STILL = RiderPose(0f, 1f, 1f, 0f)
     }
@@ -28,7 +35,7 @@ internal fun motionStyleForRide(rideId: String): MotionStyle = when (rideId) {
     "jogging" -> MotionStyle.RUN
     "bicycle" -> MotionStyle.BIKE
     "kickboard" -> MotionStyle.KICK
-    "cart" -> MotionStyle.MOTOR
+    "inline" -> MotionStyle.SKATE
     else -> MotionStyle.NONE
 }
 
@@ -58,12 +65,22 @@ internal fun riderPose(style: MotionStyle, seconds: Float, cadence: Float, phase
                 scaleX = 1f + 0.04f * land,
                 scaleY = 1f - 0.06f * land,
                 tiltDegrees = 3.2f * sin(PI.toFloat() * steps),
+                // The legs swap at each landing, in step with the bounce.
+                frame = floor(steps).toInt() and 1,
             )
         }
         MotionStyle.BIKE -> {
             // Pedalling: the rider rocks side to side once per crank turn, with a tiny bob.
-            val crank = tau * (seconds * 1.4f * cadence + phase)
-            RiderPose(lift = 0.01f * abs(sin(crank)), scaleX = 1f, scaleY = 1f, tiltDegrees = 3.5f * sin(crank))
+            val turns = seconds * 1.4f * cadence + phase
+            val crank = tau * turns
+            RiderPose(
+                lift = 0.01f * abs(sin(crank)),
+                scaleX = 1f,
+                scaleY = 1f,
+                tiltDegrees = 3.5f * sin(crank),
+                // The other pedal comes down every half turn.
+                frame = floor(turns * 2f).toInt() and 1,
+            )
         }
         MotionStyle.KICK -> {
             // Glide, then a quick push off every cycle: a small hop and a lean, then settle.
@@ -75,6 +92,21 @@ internal fun riderPose(style: MotionStyle, seconds: Float, cadence: Float, phase
                 scaleX = 1f,
                 scaleY = 1f + 0.02f * push,
                 tiltDegrees = -2.2f * push + 0.8f * sin(tau * cycle),
+                // The pushing foot is down only during the push.
+                frame = if (push > 0f) 1 else 0,
+            )
+        }
+        MotionStyle.SKATE -> {
+            // Inline skating: long alternating pushes. The skater leans well over the gliding leg
+            // (the lean flips every stride), rises a touch mid-glide, and the legs swap each stride.
+            val strides = seconds * 1.3f * cadence + phase * 2f
+            val glide = abs(sin(PI.toFloat() * strides))
+            RiderPose(
+                lift = 0.012f * glide,
+                scaleX = 1f,
+                scaleY = 1f,
+                tiltDegrees = 5f * sin(PI.toFloat() * strides),
+                frame = floor(strides).toInt() and 1,
             )
         }
         MotionStyle.MOTOR -> {

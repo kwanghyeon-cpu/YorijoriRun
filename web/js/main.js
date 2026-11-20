@@ -40,7 +40,7 @@ const state = {
 // Bump this whenever an asset file is replaced in place (same filename, new pixels) — the
 // dev server sends no cache-control headers, so browsers otherwise keep serving stale
 // bytes for a path they've already fetched, same issue as the JS/CSS ?v= busters.
-const ASSET_VERSION = 3;
+const ASSET_VERSION = 5; // bump whenever a sprite, backdrop or other image under web/assets changes
 
 const images = {};
 function preloadImage(path) {
@@ -54,6 +54,7 @@ function preloadImage(path) {
   ...CITIES.map(c => c.sprite),
   ...CARS.map(c => c.rearSprite),
   ...Object.values(TRAFFIC_KINDS).map(k => k.sprite),
+  ...Object.values(SPRITE_FRAME_B), // second animation frames (sprite-frames.js)
 ].forEach(preloadImage);
 
 const audio = new AudioManager();

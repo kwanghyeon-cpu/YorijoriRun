@@ -2,7 +2,7 @@
 
 이름은 2026-11-20에 **요리조리 런**(코드 `YorijoriRun`, 패키지 `com.khcompany.yorijorirun`)으로 정했다. 임시 이름은 Path Dash였다. 프로젝트 폴더는 `C:\Users\innocean\AndroidStudioProjects\YorijoriRun`(2026-11-20에 `D:\Dev\PathDash`에서 옮김).
 
-Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 운영 중인 앱)를 복제해 만든 **새 게임**. 게임 방식은 그대로 두고, 조종 대상을 자동차에서 조깅·자전거·배달 카트·킥보드 4종(앱 id `jogging`/`bicycle`/`cart`/`kickboard`)으로, 무대를 도로에서 산책로·자전거길 느낌의 "길"로 바꾸는 것이 목표다.
+Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 운영 중인 앱)를 복제해 만든 **새 게임**. 게임 방식은 그대로 두고, 조종 대상을 자동차에서 조깅·자전거·인라인·킥보드 4종(앱 id `jogging`/`bicycle`/`inline`/`kickboard`)으로, 무대를 도로에서 산책로·자전거길 느낌의 "길"로 바꾸는 것이 목표다.
 
 ## 핵심 구조 (Lane Dash에서 그대로 가져옴)
 
@@ -39,8 +39,8 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 홈 화면은 앱·웹 모두 로고·부제·BEST를 위쪽 하늘에, 작은 PLAY 버튼(폭 50%)을 맨 아래 가까운 길 위에 두고, 그 사이는 타이틀 그림의 네 탈것이 보이게 비워 둔다.
 - 제목은 글자가 아니라 디자인한 로고 그림 `title_logo.png`다(앱 `drawable-nodpi`, 웹 `assets/ui`, 화면 읽기용 설명 "요리조리 런"). `design/title-icon/logo.html`의 C3 시안(Black Han Sans, OFL)으로 그린다. 다시 만들 때: `node tools/store-screenshots/serve.mjs <출력 폴더>` → `http://127.0.0.1:8145/design/title-icon/logo.html?c=C3&save=1` → `node design/title-icon/make-logo.cjs <출력 폴더>`.
 - 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 종류별 `drawHalfWidth`, 충돌 폭은 모든 장애물이 `OBSTACLE_HALF_WIDTH`(0.15) 하나다. 장애물은 늘 차선 한가운데 있어서 폭은 차선을 옮기는 중에만 의미가 있고, 그림과 상관없게 했다.
-- 내 탈것은 모두 같은 높이 `PLAYER_DRAW_HEIGHT`(0.62)로 그리고, 가로로 넓은 그림은 폭이 `PLAYER_DRAW_MAX_WIDTH`(0.38, 한 차선 안)에서 멈춘다(비율 유지). 충돌은 모든 탈것이 `PLAYER_HALF_WIDTH`로 같다. 3번 탈것은 처음에 리어카였는데 넓은 그림이라 작게 보여서, 세로로 긴 배달 전동 카트("배달 카트", id는 `cart` 그대로)로 바꿨다.
+- 내 탈것은 모두 같은 높이 `PLAYER_DRAW_HEIGHT`(0.62)로 그리고, 가로로 넓은 그림은 폭이 `PLAYER_DRAW_MAX_WIDTH`(0.38, 한 차선 안)에서 멈춘다(비율 유지). 충돌은 모든 탈것이 `PLAYER_HALF_WIDTH`로 같다. 3번 탈것은 처음에 리어카였는데 넓은 그림이라 작게 보여서, 세로로 긴 배달 전동 카트로 바꿨다가, 2026-11-20에 인라인스케이트("인라인", id `inline`, 그림 파일은 그대로 `car_rear_3`)로 바꿨다. 인라인은 `SKATE` 움직임(좌우로 크게 기울며 다리 교대).
 - 길에는 차선 점선을 그리지 않는다(산책로라서). 5칸은 게임 규칙에만 있다.
-- 캐릭터는 코드로 움직인다(종이인형처럼 미끄러지지 않게): 달리기는 걸음마다 튀고 착지 때 눌리며 좌우로 흔들리고, 자전거는 페달 박자로 흔들리고, 킥보드는 주기적으로 발을 구르고, 전동 탈것은 미세하게 떤다. 그리기 전용이라 엔진·충돌은 그대로다. 앱 `ui/screens/HighwayMotion.kt` ↔ 웹 `highway-render.js`의 `riderPose`, 숫자는 같이 바꾼다.
+- 캐릭터는 코드로 움직인다(종이인형처럼 미끄러지지 않게): 달리기는 걸음마다 튀고 착지 때 눌리며 좌우로 흔들리고, 자전거는 페달 박자로 흔들리고, 킥보드는 주기적으로 발을 구르고, 전동 탈것은 미세하게 떤다. 그리기 전용이라 엔진·충돌은 그대로다. 앱 `ui/screens/HighwayMotion.kt` ↔ 웹 `highway-render.js`의 `riderPose`, 숫자는 같이 바꾼다. 다리가 움직이는 6명(조깅·자전거·킥보드, 자전거 탄 사람·강아지 산책·러닝 크루)은 2프레임 그림을 걸음·페달 박자에 맞춰 번갈아 보여 줄 수 있다: 원본 `<이름>_frames.png`(왼쪽·오른쪽 반)를 `make-sprites.cjs`가 `<이름>.png`·`<이름>_b.png`로 나누고(같은 배율, 발밑 가운데 기준), 웹용 목록 `web/js/sprite-frames.js`를 만든다. `_b`가 없으면 한 장으로 그린다. 제미나이가 두 프레임에 같은 다리를 그린 경우 `MIRROR_LEGS`로 고친다: 조깅은 2프레임 = 1프레임의 허리 아래를 좌우로 뒤집은 것, 러닝 크루는 가운데·오른쪽 사람 다리만 그 자리에서 뒤집어 넣는다. 오른쪽 아래 구석의 제미나이 별 표시는 크기와 상관없이 지운다. 프롬프트는 `design/sprites/gemini-prompts.md` 7절.
 - GitHub 공개 저장소 `kwanghyeon-cpu/YorijoriRun`(2026-11-20, origin). GitHub Pages가 master 루트를 배포한다: 웹 게임 https://kwanghyeon-cpu.github.io/YorijoriRun/web/ , 개인정보처리방침 https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy . master에 합친 뒤 푸시하면 바로 반영되니, 웹 파일을 바꾸면 `?v=` 캐시 번호를 꼭 올린다. Firebase는 이 게임 전용 새 프로젝트 `yorijori-run`이다(Lane Dash와 분리). 앱은 `app/google-services.json`(로컬 전용), 웹은 `web/js/leaderboard.js`의 설정(공개돼도 되는 값)을 쓴다. 규칙은 `firestore.rules`를 콘솔에 붙여 넣어 게시한다.
 - 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

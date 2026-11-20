@@ -37,7 +37,7 @@ magick(
   '(', '-size', `${H}x${W}`, 'gradient:rgba(18,11,34,0.55)-rgba(18,11,34,0)', '-rotate', '-90', ')',
   '-compose', 'over', '-composite', bg);
 
-// Riders: jogger, cyclist, kick scooter, delivery cart — staggered like the title art.
+// Riders: jogger, cyclist, kick scooter, inline skater — staggered like the title art.
 const RIDER_H = 330;
 const riders = [
   { sprite: 'car_rear_1', x: 600, bottom: 470 },

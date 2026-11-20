@@ -75,7 +75,7 @@ SUBJECT: a cheerful young runner jogging away from the camera, seen from directl
 SUBJECT: a cyclist riding a city bicycle away from the camera, seen from directly behind: rider in a bright red helmet and sky-blue jersey, sitting upright, both hands on the handlebar. The rear wheel is centered and drawn as a thin upright ellipse, with a small red rear reflector under the saddle and a rear rack. The handlebar ends stick out slightly on both sides.
 ```
 
-### `car_rear_3` — 내 탈것: 배달 전동 카트
+### `car_rear_3` — 내 탈것: 배달 전동 카트 (기록용, 2026-11-20에 인라인스케이트로 바뀜 → 7절의 `car_rear_3_frames`)
 
 리어카는 가로로 넓고 낮은 그림이라, 모든 탈것을 같은 높이로 그리면 차선 폭 한도에 걸려 혼자 작아 보였습니다.
 그래서 서서 타는 키 큰 배달 카트로 바꿉니다. 동네에서 음료를 배달하는 전동 카트 느낌이지만,
@@ -152,3 +152,94 @@ SUBJECT: a single orange traffic cone with two white reflective stripes on a squ
 그림을 바꾸면 화면을 보고 사람 키가 비슷해지도록 `drawHalfWidth`를 앱·웹 같이 고칩니다.
 
 스크립트는 제미나이 표시(오른쪽 아래 ✦) 같은 작은 조각과 발밑의 얇은 바닥선도 자동으로 지웁니다.
+
+## 7. 2프레임 그림 (걷기·페달 움직임)
+
+코드가 주는 움직임(튀기·흔들기)만으로는 팔다리가 그대로라서, 다리를 움직이는 캐릭터 6명은 **두 프레임**을 번갈아 보여 줍니다.
+게임은 발이 땅에 닿는 순간(자전거는 페달이 반 바퀴 돌 때)에 프레임을 바꿉니다. 배달 오토바이는 다리가 움직이지 않아 한 장 그대로 씁니다.
+
+두 프레임을 따로 생성하면 얼굴·옷·크기가 매번 달라져 깜빡거려 보입니다. 그래서 **한 장에 두 프레임을 나란히** 그리게 하고,
+스크립트가 반으로 잘라 같은 크기·같은 발 위치로 맞춥니다.
+
+| 원본 파일 (`gemini-originals/`) | 캐릭터 | 왼쪽 = 1프레임 | 오른쪽 = 2프레임 | 참고 이미지로 첨부 |
+|---|---|---|---|---|
+| `car_rear_1_frames.png` | 조깅 (내 탈것) | 왼발 앞, 오른발 뒤로 차올림 | 오른발 앞, 왼발 뒤로 차올림 | `web/assets/rear/car_rear_1.png` |
+| `car_rear_2_frames.png` | 자전거 (내 탈것) | 왼쪽 페달 아래 | 오른쪽 페달 아래 | `web/assets/rear/car_rear_2.png` |
+| `car_rear_3_frames.png` | 인라인스케이트 (내 탈것, 2026-11-20 배달 카트 대신) | 왼발로 밀고 오른발로 미끄러짐 | 오른발로 밀고 왼발로 미끄러짐 | `web/assets/rear/car_rear_1.png`(옷 색 참고) |
+| `car_rear_4_frames.png` | 킥보드 (내 탈것) | 두 발 모두 보드 위 | 한 발로 땅을 구름 | `web/assets/rear/car_rear_4.png` |
+| `traffic_rear_sedan_frames.png` | 자전거 탄 사람 | 왼쪽 페달 아래 | 오른쪽 페달 아래 | `web/assets/rear/traffic_rear_sedan.png` |
+| `traffic_rear_suv_frames.png` | 강아지 산책 | 사람 왼발 앞, 강아지 앞다리 한쪽 앞 | 사람 오른발 앞, 강아지 다른 쪽 다리 앞 | `web/assets/rear/traffic_rear_suv.png` |
+| `traffic_rear_bus_frames.png` | 러닝 크루 | 세 사람 왼발 앞 (가운데 사람만 반대여도 좋음) | 세 사람 반대 발 앞 | `web/assets/rear/traffic_rear_bus.png` |
+
+받은 그림을 위 이름으로 `design/sprites/gemini-originals/`에 넣으면, `node design/sprites/make-sprites.cjs`가
+`car_rear_1.png`(1프레임)과 `car_rear_1_b.png`(2프레임)처럼 두 장으로 나눠 앱·웹에 넣고, 웹이 쓸 목록(`web/js/sprite-frames.js`)도 만듭니다.
+같은 이름의 한 장짜리 원본(`car_rear_1.png`)이 함께 있으면 2프레임 그림을 우선 씁니다.
+
+### 2프레임 공통 블록 (아래 캐릭터별 블록 앞에 붙입니다)
+
+```text
+Create a 2-frame animation sprite sheet for a game, aspect ratio 16:9 (wide), highest resolution.
+
+LAYOUT: exactly two frames side by side. The LEFT HALF is frame 1, the RIGHT HALF is frame 2. Each frame shows the same single character, centered in its own half, with empty space between the two frames. The character is the same size and stands at the same height in both frames, and the lowest point (feet or wheels) is on the same horizontal line in both frames.
+
+CONSISTENCY (most important): match the attached reference sprite exactly — same person, same face and hair from behind, same clothes, colors, accessories, proportions and pixel style. Between the two frames, ONLY the legs (and pedals or the kicking foot) change. Head, torso, arms, vehicle body and colors are identical in both frames.
+
+STYLE: clean, detailed 16-bit retro arcade pixel art. Crisp pixel edges, limited palette, simple cel shading with one light source from the upper left. A thin 2-pixel light cream (#F5EBD7) outline around each silhouette.
+
+VIEW: straight-on REAR view from directly behind, at eye level, no perspective tilt, moving away from the camera.
+
+BACKGROUND: one perfectly flat solid magenta color #FF00FF everywhere, no gradient, no texture, no ground line, no shadow, no scenery. Do not use magenta, pink or purple anywhere on the character.
+
+DO NOT INCLUDE: any text, letters, numbers, frame labels, arrows, logos, watermarks, borders, dividing lines, extra characters.
+```
+
+### 캐릭터별 블록
+
+`car_rear_1_frames` — 조깅
+```text
+CHARACTER: the jogger from the attached reference (red running cap, sky-blue T-shirt, black shorts, white running shoes with neon soles, small water bottle on a waist belt), running away from the camera.
+FRAME 1: left foot forward and planted, right foot kicked up behind with the sole showing; right arm forward, left arm back.
+FRAME 2: the mirror stride: right foot forward and planted, left foot kicked up behind with the sole showing; left arm forward, right arm back.
+```
+
+`car_rear_2_frames` — 자전거 (내 탈것)
+```text
+CHARACTER: the cyclist on a city bicycle from the attached reference (red helmet, sky-blue jersey), riding away from the camera, both hands on the handlebar.
+FRAME 1: left pedal at the bottom with the left leg extended, right knee raised.
+FRAME 2: right pedal at the bottom with the right leg extended, left knee raised. The bicycle itself does not move or change between frames.
+```
+
+`car_rear_3_frames` — 인라인스케이트 (참고 이미지는 조깅 그림을 옷 색 참고용으로)
+```text
+CHARACTER: a new hero character in the same team colors as the attached reference: an inline skater skating away from the camera, seen from directly behind: bright red helmet, sky-blue long-sleeve top, black leggings, black-and-white inline skates with four small wheels in a row and red wheels, small knee pads. Slim, upright, nearly as tall as the reference jogger. No backpack.
+FRAME 1: pushing with the left skate: the left leg is extended out to the side and back, the right skate glides straight under the body with the knee slightly bent; the body leans a little to the right; the arms swing for balance.
+FRAME 2: the mirror stride: pushing with the right skate out to the side and back, the left skate gliding under the body; the body leans a little to the left.
+```
+
+`car_rear_4_frames` — 킥보드
+```text
+CHARACTER: the kick-scooter rider from the attached reference (red helmet, sky-blue hoodie, dark pants, white sneakers), riding away from the camera, both hands on the handlebar.
+FRAME 1: gliding: both feet on the narrow deck, one in front of the other.
+FRAME 2: pushing off: the left foot stays on the deck, the right foot is down beside the scooter touching the ground mid-push. The scooter itself does not move between frames.
+```
+
+`traffic_rear_sedan_frames` — 자전거 탄 사람
+```text
+CHARACTER: the commuter cyclist from the attached reference (gray helmet, olive-green jacket, dark backpack, rear basket), riding away from the camera.
+FRAME 1: left pedal at the bottom with the left leg extended, right knee raised.
+FRAME 2: right pedal at the bottom with the right leg extended, left knee raised. The bicycle itself does not move between frames.
+```
+
+`traffic_rear_suv_frames` — 강아지 산책
+```text
+CHARACTER: the dog walker and the golden-brown dog from the attached reference (person in a mustard-yellow cardigan and blue jeans on the left, holding a leash; dog on the right), walking away from the camera.
+FRAME 1: the person's left foot forward; the dog's front-left and back-right legs forward.
+FRAME 2: the person's right foot forward; the dog's front-right and back-left legs forward. The dog's tail is wagged to the other side.
+```
+
+`traffic_rear_bus_frames` — 러닝 크루
+```text
+CHARACTER: the running crew of three from the attached reference (matching teal-green crew T-shirts with a plain white stripe, black shorts, colorful running shoes), jogging away from the camera side by side.
+FRAME 1: the left and right runners have their left foot forward, the middle runner has the right foot forward (so the group doesn't look like marching soldiers).
+FRAME 2: every runner on the opposite foot.
+```

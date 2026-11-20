@@ -14,7 +14,7 @@
 | "요리조리 런" 로고(`design/title-icon/logo`에서 따로 디자인)와 부제, PLAY 버튼은 **코드가 위쪽 약 8~40%에 올립니다**. 제미나이는 한글을 잘 못 그립니다. | 위쪽 40%는 하늘과 먼 도시만 둡니다. **글자는 넣지 않습니다.** |
 | 게임 속 길에는 차선 표시가 없습니다. | 길에 점선·차선을 그리지 않습니다. |
 | 위아래에 코드가 어두운 그라데이션을 깝니다. | 그림 자체는 밝고 선명해도 됩니다. |
-| 게임 그림체는 또렷한 픽셀아트이고, 주인공들은 빨간 모자·하늘색 옷입니다. | 아래쪽(55~90%)에 네 탈것(조깅·자전거·킥보드·배달 카트)을 뒷모습으로, 같은 옷 색으로 둡니다. |
+| 게임 그림체는 또렷한 픽셀아트이고, 주인공들은 빨간 모자·하늘색 옷입니다. | 아래쪽(55~90%)에 네 탈것(조깅·자전거·킥보드·인라인스케이트)을 뒷모습으로, 같은 옷 색으로 둡니다. |
 
 ### 앱 아이콘
 
@@ -28,7 +28,7 @@
 ## 1. 사용 방법
 
 1. 제미나이에서 **이미지 생성**을 열고 아래 블록을 그대로 입력합니다(타이틀과 아이콘은 따로 생성).
-2. 그림체를 맞추려면 참고 이미지를 함께 첨부하세요: `web/assets/rear/car_rear_1.png`(조깅 주인공), `web/assets/rear/car_rear_3.png`(배달 카트), `web/assets/cities/city_seoul.png`(배경 톤).
+2. 그림체를 맞추려면 참고 이미지를 함께 첨부하세요: `web/assets/rear/car_rear_1.png`(조깅 주인공), `web/assets/rear/car_rear_3.png`(인라인), `web/assets/cities/city_seoul.png`(배경 톤).
 3. 비율은 타이틀 **9:16(세로)**, 아이콘 **1:1**, 해상도는 가장 높게 선택합니다.
 4. 마음에 드는 결과를 `design/title-icon/gemini-originals/` 폴더에 아래 이름으로 저장합니다(png, webp, jpg 모두 가능).
    - 타이틀: `home_portrait.png`
@@ -51,7 +51,7 @@ SCENE: a sunny late-afternoon city riverside walking path seen from behind and s
 COMPOSITION (very important, vertical positions from the top of the image):
 - 0%-40%: sky and the far skyline only, calm and low in detail, with the horizon at about 38%. Leave this area open: a game logo and a button will be drawn on top of it later.
 - 40%-55%: the far part of the walking path, empty.
-- 55%-90%: four friendly characters side by side, seen from directly behind, moving away from the viewer along the path, each in its own lane, all about the same height: a jogger, a cyclist on a city bike, a kick-scooter rider, and a rider standing on a small stand-up electric delivery cart with a tall plain cream cooler box in front of them (generic, no logo). All four wear the same team colors: bright red cap or helmet and sky-blue top. Energetic, playful, mid-motion.
+- 55%-90%: four friendly characters side by side, seen from directly behind, moving away from the viewer along the path, each in its own lane, all about the same height: a jogger, a cyclist on a city bike, a kick-scooter rider, and an inline skater mid-stride (red helmet, black leggings, inline skates). All four wear the same team colors: bright red cap or helmet and sky-blue top. Energetic, playful, mid-motion.
 - 90%-100%: just the near path, no characters.
 - Keep everything important within the central 88% of the width; the sides may be cropped.
 
