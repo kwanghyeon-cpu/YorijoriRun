@@ -42,8 +42,9 @@ class AudioManager {
     this.bgm.loop = true;
     this.unlocked = false;
 
-    this.bgmVolume = loadVolume(BGM_VOLUME_KEY, 0.85);
-    this.sfxVolume = loadVolume(SFX_VOLUME_KEY, 1.0);
+    // Both start at 50%; a value the player set with the sliders is kept. Mirrors SoundManager.kt.
+    this.bgmVolume = loadVolume(BGM_VOLUME_KEY, 0.5);
+    this.sfxVolume = loadVolume(SFX_VOLUME_KEY, 0.5);
     this.bgm.volume = this.bgmVolume;
   }
 

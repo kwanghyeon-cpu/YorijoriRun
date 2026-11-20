@@ -29,6 +29,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 배경 가공: `design/city-backdrops/make-backdrops.cjs`, 제미나이 프롬프트 예시 `design/city-backdrops/gemini-prompts.md`
 - 탈것·장애물 그림 가공: `node design/sprites/make-sprites.cjs` (`--dry`는 임시 폴더에만 저장), 프롬프트 `design/sprites/gemini-prompts.md`. 원본은 `design/sprites/gemini-originals/`(커밋 안 함)
 - 타이틀·앱 아이콘 가공: `node design/title-icon/make-title-icon.cjs` (`--dry` 가능), 프롬프트 `design/title-icon/gemini-prompts.md`. 원본 `home_portrait.*`·`app_icon.*`은 `design/title-icon/gemini-originals/`(커밋 안 함). 스토어 아이콘은 `design/icon/store_icon_512.png`. `design/icon/make_icon.mjs`와 svg들은 Lane Dash 시절 자동차 아이콘용이라 쓰지 않는다.
+- 소리 기본 음량은 배경음악·효과음 모두 50%다. 앱은 음량 설정이 없어 `SoundManager`의 `BGM_VOLUME`·`SFX_VOLUME`(0.5)으로 고정, 웹은 설정 슬라이더의 처음 값이 50%이고 사용자가 바꾼 값은 저장된다.
 - 효과음 합성: `node design/sounds/synth-sounds.cjs` (`--dry` 가능). 지금 소리 7개는 이 스크립트가 만든 칩튠이다(외부 음원 없음). 소리를 바꾸면 웹 `audio.js`의 `SOUND_VERSION`을 올린다. 최대 음량은 자리별 Lane Dash 소리에 맞췄다.
 - 효과음 가공(무료 사이트 소리로 바꿀 때): `node design/sounds/make-sounds.cjs` (`--dry` 가능). 원본은 `design/sounds/originals/<파일 이름>.wav`(커밋 안 함), 출처·라이선스는 `design/sounds/SOURCES.md`, CC BY는 `NOTICE.md`에도 적는다. WAV는 바로 읽고 MP3·OGG는 ffmpeg가 필요한데 이 PC에는 없다. 음량은 자리별 Lane Dash 소리의 최대 음량(peak)에 맞춘다.
 

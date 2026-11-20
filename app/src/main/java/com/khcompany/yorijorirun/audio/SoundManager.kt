@@ -10,8 +10,15 @@ import com.khcompany.yorijorirun.game.SfxEvent
 /**
  * Short SFX play through a pooled [SoundPool] for low latency; the looping background track
  * uses a plain [MediaPlayer]. Call [release] when the owning screen leaves composition.
+ * The app has no volume settings, so music and effects play at [BGM_VOLUME] and [SFX_VOLUME]
+ * (the web build's starting slider values, 50%).
  */
 class SoundManager(context: Context) {
+    private companion object {
+        const val BGM_VOLUME = 0.5f
+        const val SFX_VOLUME = 0.5f
+    }
+
     private val appContext = context.applicationContext
 
     private val soundPool = SoundPool.Builder()
@@ -48,7 +55,8 @@ class SoundManager(context: Context) {
 
     fun play(event: SfxEvent) {
         val cue = cues[event] ?: return
-        soundPool.play(cue.soundId, cue.volume, cue.volume, 1, 0, cue.rate)
+        val volume = cue.volume * SFX_VOLUME
+        soundPool.play(cue.soundId, volume, volume, 1, 0, cue.rate)
     }
 
     fun pauseBgm() {
@@ -60,14 +68,14 @@ class SoundManager(context: Context) {
     }
 
     fun playNewBest() {
-        soundPool.play(newBestSoundId, 1f, 1f, 1, 0, 1f)
+        soundPool.play(newBestSoundId, SFX_VOLUME, SFX_VOLUME, 1, 0, 1f)
     }
 
     fun startBgm() {
         if (bgmPlayer != null) return
         bgmPlayer = MediaPlayer.create(appContext, R.raw.bgm_loop)?.apply {
             isLooping = true
-            setVolume(0.85f, 0.85f)
+            setVolume(BGM_VOLUME, BGM_VOLUME)
             start()
         }
     }
