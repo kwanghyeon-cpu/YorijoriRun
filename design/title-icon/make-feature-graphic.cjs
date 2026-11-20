@@ -18,19 +18,21 @@ fs.mkdirSync(TMP, { recursive: true });
 const magick = (...a) => execFileSync('magick', a, { maxBuffer: 1 << 28 }).toString().trim();
 
 const W = 1024, H = 500;
-// The title art's ground starts about 44.5% down its 2160px height, and its own riders start right
-// below (~50%). So the banner is built in two parts: the sky and skyline just above the horizon,
-// and the empty strip of path and grass just below it, stretched down to fill the bottom half.
-const TITLE_W = 1080, TITLE_H = 2160, HORIZON = 0.445;
-const GROUND_STRIP = 60; // title px of empty ground under the horizon (riders begin below ~100)
+// The title art's riders stand right on its horizon, so the banner is built in two parts: the sky
+// and skyline just above the horizon (the ground starts ~51.5% down the 2160px art), and the empty
+// near path at the very bottom of the art (kept free for the PLAY button, from ~86% down),
+// softened into a foreground for the sprites to stand on.
+const TITLE_W = 1080, TITLE_H = 2160, HORIZON = 0.515;
+const GROUND_FROM = 0.86; // the empty near path at the bottom of the title art
 const SKY_SHARE = 0.5; // the horizon sits halfway down the banner
 const horizonY = Math.round(TITLE_H * HORIZON);
+const groundY = Math.round(TITLE_H * GROUND_FROM);
 const skyH = Math.round(H * SKY_SHARE * TITLE_W / W);
 const bg = path.join(TMP, 'bg.png');
 magick(
   '(', path.join(RES, 'home_portrait.png'), '-crop', `${TITLE_W}x${skyH}+0+${horizonY - skyH}`, '+repage',
   '-resize', `${W}x${Math.round(H * SKY_SHARE)}!`, ')',
-  '(', path.join(RES, 'home_portrait.png'), '-crop', `${TITLE_W}x${GROUND_STRIP}+0+${horizonY}`, '+repage',
+  '(', path.join(RES, 'home_portrait.png'), '-crop', `${TITLE_W}x${TITLE_H - groundY}+0+${groundY}`, '+repage',
   '-resize', `${W}x${H - Math.round(H * SKY_SHARE)}!`, '-blur', '0x2', ')', // soft, like near ground
   '-append', '+repage',
   // a soft dark wash on the left half for the logo

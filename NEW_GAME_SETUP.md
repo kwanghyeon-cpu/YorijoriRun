@@ -49,7 +49,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 | `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·인라인·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
 | `traffic_rear_*.png` (움직이는 장애물 4칸) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 | 교체함 |
 | `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘 | 교체함 |
-| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 (2026-11-20 두 번째: 배달 카트, 차선 없는 길). 3번 탈것이 인라인으로 바뀌어 그림 속 배달 카트가 맞지 않음 → **다시 받기로 함** (프롬프트는 인라인으로 고쳐 둠) |
+| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 (2026-11-20 두 번째: 배달 카트, 차선 없는 길). 세 번째(2026-11-20): 지금 게임 속 네 캐릭터(인라인 포함)와 같은 모습, 차선 없는 길, 아래쪽은 PLAY 버튼 자리 |
 | `car_rear_3_frames.png` → `car_rear_3.png`·`_b.png` | 인라인스케이트 2프레임 (프롬프트: `design/sprites/gemini-prompts.md` 7절) | 넣음 (2026-11-20, 왼발·오른발 밀기 2프레임) |
 | `title_logo.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | "요리조리 런" 로고, 지그재그 화살표가 "런"으로 들어가는 C3 시안 (`design/title-icon/logo.html`) | 새로 넣음 |
 | `ic_launcher_foreground.png`, `design/icon/store_icon_512.png` | 요리조리 피하는 러너 아이콘 (배경 층은 보라색 그라데이션 그대로) | 교체함 |
