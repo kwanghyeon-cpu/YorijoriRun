@@ -14,7 +14,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 
 ## 이 프로젝트에서 지켜야 할 것
 
-- **Lane Dash의 계정 ID를 절대 다시 쓰지 않는다.** AdMob은 지금 Google 샘플 ID, 실제 ID는 이 게임 전용으로 새로 받는다.
+- **Lane Dash의 계정 ID를 절대 다시 쓰지 않는다.** AdMob은 이 게임 전용 앱(`ca-app-pub-4172722948933624~3343896247`)의 ID를 쓴다(같은 AdMob 계정이라 게시자 번호만 Lane Dash와 같다). 디버그 빌드는 `AdManager`가 자동으로 Google 샘플 광고를 쓴다.
 - `app/google-services.json`은 yorijori-run 프로젝트의 진짜 파일이지만 로컬 전용이다(gitignore, 저장소에 올리지 않음).
 - 스토어에 올리기 전에 이름을 다시 바꿀 일이 생기면 `node tools/rename-project.cjs YorijoriRun <New> "요리조리 런" "<New Name>"` 한 번으로 패키지·클래스·표시 이름·저장 키·순위표 컬렉션을 바꾼다. 패키지명은 스토어에 올린 뒤에는 못 바꾼다.
 - 사람·아기가 다치는 표현은 피한다(사람 장애물은 "피하는" 표현, 부딪히면 "부딪혔어요" 정도로).

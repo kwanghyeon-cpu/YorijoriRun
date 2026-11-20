@@ -20,10 +20,9 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 
 private const val TAG = "AdManager"
 
-// Release ad units. Still Google's sample IDs: this game needs its own AdMob app and units before
-// release (see NEW_GAME_SETUP.md). Never reuse Lane Dash's IDs.
-private const val INTERSTITIAL_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
-private const val REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
+// Release ad units of this game's own AdMob app (요리조리 런). Never reuse Lane Dash's IDs.
+private const val INTERSTITIAL_UNIT_ID = "ca-app-pub-4172722948933624/6180270589"
+private const val REWARDED_UNIT_ID = "ca-app-pub-4172722948933624/4675617223"
 
 // Google's official sample units, used for debuggable builds so development and testing
 // never generate real impressions/clicks on the live ad units (an AdMob policy risk).

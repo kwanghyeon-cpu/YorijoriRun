@@ -15,7 +15,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 ## 이미 분리해 둔 것
 - **패키지**: `com.khcompany.yorijorirun` (Lane Dash와 별개의 앱)
 - **버전**: 0.1.0 (versionCode 1)
-- **광고**: Lane Dash의 실제 AdMob ID를 지우고 Google 샘플 ID로 바꿔 둠 (`AndroidManifest.xml`, `ads/AdManager.kt`)
+- **광고**: Lane Dash의 AdMob ID를 지우고, 이 게임 전용 AdMob 앱의 ID를 넣음 (`AndroidManifest.xml`, `ads/AdManager.kt`)
 - **순위표**: 컬렉션을 `scores_yorijorirun`로 분리 (앱·웹), `firestore.rules`도 이 컬렉션만 열도록 정리
 - **웹 저장 키**: `yorijori_run_*` (같은 github.io 도메인에서 Lane Dash 기록과 섞이지 않음)
 
@@ -27,7 +27,8 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
    - 웹 앱도 등록(호스팅 체크 안 함)하고 `firebaseConfig` 값으로 `web/js/leaderboard.js`의 설정을 바꾸기.
 2. **Firestore** (끝남, 2026-11-20, 규칙 게시 확인: 순위표 읽기 성공, 잘못된 기록과 다른 컬렉션은 거부): 데이터베이스 만들기(프로덕션 모드, 위치 asia-northeast3 서울 추천) → 규칙 탭에 `firestore.rules` 전체를 붙여 넣고 게시.
    게시 전까지는 이 게임의 순위표가 "권한 없음"으로 실패합니다(의도된 안전장치).
-3. **AdMob**: 새 앱 등록 → 앱 ID(`~`)와 전면·보상형 광고 단위 ID(`/`)를 받아서 위 두 파일의 샘플 ID 교체.
+3. **AdMob** (끝남, 2026-11-20): 새 앱 `요리조리 런` 등록. 앱 ID `ca-app-pub-4172722948933624~3343896247`,
+   전면 `…/6180270589`, 보상형 `…/4675617223`을 넣음(디버그 빌드는 계속 Google 샘플 광고). 유럽·영국용 동의 화면(UMP)은 아직 없음.
    `app-ads.txt`는 개발자 사이트에 이미 있으면 그대로 됩니다.
 4. **Play Console**: 새 앱 만들기, 스토어 등록정보, 콘텐츠 등급, 개인정보처리방침 주소.
    스토어 문구·카테고리·콘텐츠 등급·데이터 보안 답변 초안은 `store-listing.md`, 스크린샷 7장은 `store-assets/screenshots-0.1/`
