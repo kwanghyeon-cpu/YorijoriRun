@@ -49,7 +49,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 `design/sprites/gemini-originals/`에 같은 파일 이름으로 넣고 `node design/sprites/make-sprites.cjs`를 실행하면
 배경을 지우고 폭을 맞춰 앱·웹에 함께 넣습니다. 그림을 넣은 뒤에는 종류별 화면 폭(`TRAFFIC_KINDS`의 `halfWidth`)을 다시 맞춥니다.
 | `city_*.png` | 그대로 써도 됨 (길 건너편 도시) |
-| `home_portrait.png`, 앱 아이콘 | 새 타이틀 화면, 새 아이콘 |
+| `home_portrait.png`, 앱 아이콘 | 새 타이틀 화면, 새 아이콘. 프롬프트 `design/title-icon/gemini-prompts.md`, 받은 그림은 `design/title-icon/gemini-originals/`에 `home_portrait.png`·`app_icon.png`로 저장 → `node design/title-icon/make-title-icon.cjs` |
 | 효과음 (`res/raw`, `web/assets`) | 발소리·자전거 벨 등 |
 
 코드 쪽 남은 일: 없음(그림·소리 교체만 남음).

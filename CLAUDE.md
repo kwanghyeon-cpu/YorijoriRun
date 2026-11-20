@@ -28,6 +28,7 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 스토어 스크린샷 생성: `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`
 - 배경 가공: `design/city-backdrops/make-backdrops.cjs`, 제미나이 프롬프트 예시 `design/city-backdrops/gemini-prompts.md`
 - 탈것·장애물 그림 가공: `node design/sprites/make-sprites.cjs` (`--dry`는 임시 폴더에만 저장), 프롬프트 `design/sprites/gemini-prompts.md`. 원본은 `design/sprites/gemini-originals/`(커밋 안 함)
+- 타이틀·앱 아이콘 가공: `node design/title-icon/make-title-icon.cjs` (`--dry` 가능), 프롬프트 `design/title-icon/gemini-prompts.md`. 원본 `home_portrait.*`·`app_icon.*`은 `design/title-icon/gemini-originals/`(커밋 안 함). 아이콘을 바꾸면 `NOTICE.md`의 Tabler 자동차 출처 표기를 지운다.
 
 ## 진행 상황
 
