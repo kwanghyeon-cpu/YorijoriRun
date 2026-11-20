@@ -78,7 +78,7 @@ Play Console의 **스토어 등록정보** 화면에 그대로 붙여 넣을 수
 | 항목 | 규격 | 파일 |
 |---|---|---|
 | 앱 아이콘 | 512×512 PNG | `design/icon/store_icon_512.png` |
-| 휴대전화 스크린샷 | 1080×1920, 2~8장 | `store-assets/screenshots-1.0/01_gameplay.png` ~ `07_gameover.png` (7장, `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`로 다시 만들 수 있음) |
+| 휴대전화 스크린샷 | 1080×1920, 2~8장 | `store-assets/screenshots-1.0/01_gameplay.png` ~ `08_gameover.png` (8장, 2번이 캐릭터 선택 화면, `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`로 다시 만들 수 있음) |
 | 그래픽 이미지(피처 그래픽) | 1024×500 | `design/icon/feature_graphic.png` (타이틀 그림의 하늘·산책로 + 탈것 4종 + 로고. `node design/title-icon/make-feature-graphic.cjs`로 다시 만들 수 있음) |
 
 올릴 때는 `node tools/make-release-assets.cjs`가 위 파일을 `store-assets/release-<버전>/`에 모으고, 스크린샷의 투명 채널을 없앱니다(Play는 투명 채널이 있는 스크린샷을 받지 않음).
@@ -89,24 +89,6 @@ Play Console의 **스토어 등록정보** 화면에 그대로 붙여 넣을 수
   주소: https://kwanghyeon-cpu.github.io/YorijoriRun/privacy-policy (GitHub Pages, 2026-11-20 공개).
 - 이메일: 방침의 문의처와 같은 주소를 쓰면 됩니다.
 
-## 콘텐츠 등급 설문 참고
+## 콘텐츠 등급·데이터 보안·광고 ID 등 정책 답변
 
-- 폭력: 없음(장애물에 부딪히면 게임이 끝날 뿐, 다치는 표현 없음)
-- 사용자 간 상호작용: 순위표에 **사용자가 입력한 닉네임이 공개**됩니다. 채팅·메시지 기능은 없습니다.
-- 광고: 있음(AdMob 전면광고, 보상형 광고)
-- 디지털 구매: 없음
-
-## 데이터 보안 양식 참고 (콘솔 "앱 콘텐츠 > 데이터 보안")
-
-정확한 답은 Google의 AdMob 데이터 공개 안내를 보고 확인해 주세요. 앱 코드 기준으로는 아래와 같습니다.
-
-| 데이터 | 수집 | 공유 | 목적 | 비고 |
-|---|---|---|---|---|
-| 닉네임(사용자가 입력, 순위표) | 예 | 아니요 | 앱 기능 | 선택 사항(TOP 10일 때만, 입력하지 않아도 됨) |
-| 기기 또는 기타 ID(광고 ID) | 예 | 예(Google) | 광고, 분석, 사기 방지 | AdMob SDK |
-| 앱 상호작용 | 예 | 예(Google) | 광고, 분석 | AdMob SDK |
-| 진단 정보 | 예 | 예(Google) | 분석 | AdMob SDK |
-| 대략적인 위치(IP 기반) | 예 | 예(Google) | 광고 | AdMob SDK |
-
-- 전송 중 암호화: 예(Firebase·AdMob 모두 HTTPS)
-- 데이터 삭제 요청: 문의 이메일로 요청 가능(방침 4번)
+Play Console에서 고를 답은 항목별로 `RELEASE.md` 3번(앱 콘텐츠)에 정리했습니다. 기능을 바꾸면 그쪽과 `privacy-policy.md`를 함께 고칩니다.

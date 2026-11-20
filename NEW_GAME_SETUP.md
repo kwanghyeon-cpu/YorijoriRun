@@ -36,7 +36,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
    피처 그래픽(1024×500)은 `design/icon/feature_graphic.png`(`node design/title-icon/make-feature-graphic.cjs`).
    개인 개발자 계정은 새 앱마다 비공개 테스트 요건이 있을 수 있으니 콘솔에서 확인.
    **1.0.0 출시 자료는 다 만들어 둠(2026-11-20)**: `node tools/make-release-assets.cjs` → `store-assets/release-1.0.0/`
-   (서명된 AAB, mapping.txt, 아이콘, 피처 그래픽, 24비트 스크린샷 7장, 문구). 어느 파일을 어디에 올리는지는 `RELEASE.md`.
+   (서명된 AAB, mapping.txt, 아이콘, 피처 그래픽, 24비트 스크린샷 8장, 2번이 캐릭터 선택, 문구). Play Console에서 어디에 무엇을 넣고 어떻게 답하는지는 `RELEASE.md`(항목별 답, 테스트 트랙, 출시 뒤 할 일).
 5. **서명** (끝남, 2026-11-20): 이 게임 전용 새 업로드 키 `keystore/yorijorirun-release.jks`(별칭 `yorijorirun`, CN=KH Company)와
    `keystore.properties`. 둘 다 커밋 안 되니 따로 백업하세요.
 6. **GitHub / 웹** (끝남, 2026-11-20): 공개 저장소 https://github.com/kwanghyeon-cpu/YorijoriRun 에 master를 올리고 Pages를 켰습니다.

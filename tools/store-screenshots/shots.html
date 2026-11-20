@@ -142,28 +142,71 @@ const shots = {
     band(ctx, '도시 산책로를 달리는 레트로 러너', '세로 화면으로 즐기는 레트로 러닝 게임');
     return c;
   },
-  '02_nearmiss'() {
+  '02_characters'() {
+    // The character screen as the game shows it (web main.js buildCarGrid / app CarSelectScreen), at phone scale.
+    const c = shotCanvas(), ctx = c.getContext('2d');
+    ctx.fillStyle = '#120B22'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#FFC93C'; ctx.font = '800 66px Pretendard'; ctx.fillText('캐릭터 선택', 56, BAND + 100);
+    const M = 48, G = 30, top = BAND + 140, btnH = 110, btnY = H - 56 - btnH;
+    const cw = (W - 2 * M - G) / 2, ch = (btnY - 30 - top - G) / 2;
+    CARS.forEach((car, i) => {
+      const x = M + (i % 2) * (cw + G), y = top + Math.floor(i / 2) * (ch + G);
+      const selected = i === 0;
+      rr(ctx, x, y, cw, ch, 36); ctx.fillStyle = '#1D1233'; ctx.fill();
+      ctx.lineWidth = selected ? 8 : 3; ctx.strokeStyle = selected ? '#FFC93C' : 'rgba(244,239,255,0.2)'; ctx.stroke();
+      // thumbnail: the rear sprite, bottom-anchored
+      const tx = x + 22, ty = y + 22, tw = cw - 44, th = ch - 410;
+      rr(ctx, tx, ty, tw, th, 24); ctx.fillStyle = '#120B22'; ctx.fill();
+      const img = images[car.rearSprite];
+      if (img && img.naturalWidth) {
+        const dh = th * 0.86, dw = Math.min(dh * img.naturalWidth / img.naturalHeight, tw * 0.8);
+        const dh2 = dw * img.naturalHeight / img.naturalWidth;
+        ctx.drawImage(img, tx + (tw - dw) / 2, ty + th * 0.95 - dh2, dw, dh2);
+      }
+      let cy = ty + th + 58;
+      ctx.fillStyle = '#F4EFFF'; ctx.font = '700 46px Pretendard'; ctx.fillText(car.name, x + 28, cy);
+      cy += 38; ctx.fillStyle = 'rgba(244,239,255,0.6)'; ctx.font = '600 26px Pretendard'; ctx.fillText(car.nameEn, x + 28, cy);
+      cy += 22;
+      for (const [label, v] of [['속도', car.stats.speed], ['몸놀림', car.stats.agility], ['체력', car.stats.stamina]]) {
+        cy += 44;
+        ctx.fillStyle = 'rgba(244,239,255,0.75)'; ctx.font = '600 28px Pretendard'; ctx.fillText(label, x + 28, cy);
+        for (let p = 0; p < 5; p++) {
+          rr(ctx, x + 140 + p * 50, cy - 22, 40, 18, 6);
+          ctx.fillStyle = p < v ? '#FFC93C' : 'rgba(244,239,255,0.15)'; ctx.fill();
+        }
+      }
+      cy += 56; ctx.font = '700 31px Pretendard';
+      ctx.fillStyle = '#7BD88F'; ctx.fillText('+ ' + car.stats.strength, x + 28, cy);
+      cy += 42; ctx.fillStyle = '#FF9F68'; ctx.fillText('− ' + car.stats.weakness, x + 28, cy);
+    });
+    rr(ctx, M, btnY, W - 2 * M, btnH, btnH / 2); ctx.fillStyle = '#FFC93C'; ctx.fill();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#1D1233'; ctx.font = '800 48px Pretendard'; ctx.fillText('게임 시작', W / 2, btnY + btnH / 2 + 16);
+    ctx.textAlign = 'left';
+    band(ctx, '캐릭터마다 장단점이 달라요', '빠른 자전거? 재빠른 조깅? 나에게 맞게 골라요');
+    return c;
+  },
+  '03_nearmiss'() {
     const c = shotCanvas(), ctx = c.getContext('2d');
     const e = run({ seed: 7, seconds: 33, cars: [[0.15, 1, 'SEDAN'], [4, -1, 'SUV'], [7.5, 2, 'SEDAN']] });
     play(ctx, e, 'tokyo', 'bicycle', { toast: { text: `NEAR MISS!  +${HW.NEAR_MISS_SCORE}` } });
     band(ctx, '아슬아슬하게 피하면 보너스!', 'NEAR MISS로 높은 점수에 도전하세요');
     return c;
   },
-  '03_items'() {
+  '04_items'() {
     const c = shotCanvas(), ctx = c.getContext('2d');
     const e = run({ seed: 5, seconds: 17, lane: 1, cars: [[4.5, 3, 'SEDAN']], items: [[1.8, 1, 'SHIELD'], [3.4, 2, 'MAGNET'], [5.2, 0, 'FUEL'], [6.8, 1, 'FUEL']], shield: 4.3, magnet: 6.1, fuel: 58 });
     play(ctx, e, 'paris', 'inline', { chips: [['shield', '#4DA3FF', '방어막 5초'], ['magnet', '#E63946', '자석 7초']] });
     band(ctx, '생수·방어막·자석을 모아요', '체력이 떨어지기 전에 생수병을 챙기세요');
     return c;
   },
-  '04_speed'() {
+  '05_speed'() {
     const c = shotCanvas(), ctx = c.getContext('2d');
     const e = run({ seed: 21, seconds: 46, lane: 2, cars: [[1.5, -1, 'SUV'], [3.8, 1, 'TRUCK'], [7, -2, 'SEDAN']] });
     play(ctx, e, 'newyork', 'kickboard');
     band(ctx, '갈수록 촘촘해지는 5칸 산책로', '속도는 그대로, 장애물이 점점 빽빽해져요');
     return c;
   },
-  '05_gate'() {
+  '06_gate'() {
     const c = shotCanvas(), ctx = c.getContext('2d');
     const e = run({ seed: 9, seconds: 20, lane: 2, gate: [4.2, 1], fuel: 66 });
     e.elapsedSeconds = 150; // late game: a wall of obstacles with one open lane
@@ -171,7 +214,7 @@ const shots = {
     band(ctx, '오래 달릴수록 더 어려워져요', '장애물 줄에서 열린 한 레인을 찾아 달려요');
     return c;
   },
-  '06_cities'() {
+  '07_cities'() {
     const c = shotCanvas(), ctx = c.getContext('2d');
     ctx.fillStyle = '#120B22'; ctx.fillRect(0, 0, W, H);
     const list = [['seoul', 'jogging', 3, 22], ['tokyo', 'bicycle', 7, 28], ['newyork', 'inline', 21, 30], ['paris', 'kickboard', 5, 25]];
@@ -188,7 +231,7 @@ const shots = {
     band(ctx, '4개 도시, 4명의 캐릭터', '캐릭터마다 장단점이 달라요');
     return c;
   },
-  '07_gameover'() {
+  '08_gameover'() {
     const c = shotCanvas(), ctx = c.getContext('2d');
     const e = run({ seed: 11, seconds: 38, cars: [[2.5, 0, 'TRUCK'], [5, 1, 'SEDAN']], fuel: 0.01 });
     ctx.drawImage(gameFrame(e, 'tokyo', 'jogging', W, FH), 0, BAND);
