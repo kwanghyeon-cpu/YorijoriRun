@@ -11,10 +11,10 @@
 | 사실 | 프롬프트에 어떻게 반영했나 |
 |---|---|
 | 세로 1080×2160(1:2) 그림 한 장이 화면을 꽉 채우고, 기기 비율에 따라 **위아래가 잘립니다**. | 중요한 것은 세로 15~92% 안에 둡니다. 제미나이는 9:16으로 받고 스크립트가 좌우를 조금 잘라 1:2로 맞춥니다. |
-| "요리조리 런" 로고(`design/title-icon/logo`에서 따로 디자인)와 부제, PLAY 버튼은 **코드가 위쪽 약 8~40%에 올립니다**. 제미나이는 한글을 잘 못 그립니다. | 위쪽 40%는 하늘과 먼 도시만 둡니다. **글자는 넣지 않습니다.** |
+| "요리조리 런" 로고(`design/title-icon/logo`에서 따로 디자인)·부제·최고 기록은 **코드가 위쪽 약 8~38%에**, 작은 PLAY 버튼은 **맨 아래 약 86~95%에** 올립니다. 제미나이는 한글을 잘 못 그립니다. | 위쪽 40%는 하늘과 먼 도시만, 맨 아래 14%는 빈 길만 둡니다. **글자는 넣지 않습니다.** |
 | 게임 속 길에는 차선 표시가 없습니다. | 길에 점선·차선을 그리지 않습니다. |
 | 위아래에 코드가 어두운 그라데이션을 깝니다. | 그림 자체는 밝고 선명해도 됩니다. |
-| 게임 그림체는 또렷한 픽셀아트이고, 주인공들은 빨간 모자·하늘색 옷입니다. | 아래쪽(55~90%)에 네 탈것(조깅·자전거·킥보드·인라인스케이트)을 뒷모습으로, 같은 옷 색으로 둡니다. |
+| 게임 그림체는 또렷한 픽셀아트이고, 주인공들은 빨간 모자·헬멧과 하늘색 옷입니다. | 가운데 아래(48~84%)에 네 탈것(조깅·자전거·인라인·킥보드)을 게임 속 그림과 같은 모습의 뒷모습으로 둡니다. 게임 그림 4장을 참고 이미지로 함께 넣습니다. |
 
 ### 앱 아이콘
 
@@ -28,7 +28,7 @@
 ## 1. 사용 방법
 
 1. 제미나이에서 **이미지 생성**을 열고 아래 블록을 그대로 입력합니다(타이틀과 아이콘은 따로 생성).
-2. 그림체를 맞추려면 참고 이미지를 함께 첨부하세요: `web/assets/rear/car_rear_1.png`(조깅 주인공), `web/assets/rear/car_rear_3.png`(인라인), `web/assets/cities/city_seoul.png`(배경 톤).
+2. 타이틀은 게임 속 네 캐릭터와 똑같이 보이도록 참고 이미지 4장을 함께 첨부하세요: `web/assets/rear/car_rear_1.png`(조깅), `car_rear_2.png`(자전거), `car_rear_3.png`(인라인), `car_rear_4.png`(킥보드). 배경 톤은 `web/assets/cities/city_seoul.png`를 더해도 좋아요. 아이콘은 `car_rear_1.png`만.
 3. 비율은 타이틀 **9:16(세로)**, 아이콘 **1:1**, 해상도는 가장 높게 선택합니다.
 4. 마음에 드는 결과를 `design/title-icon/gemini-originals/` 폴더에 아래 이름으로 저장합니다(png, webp, jpg 모두 가능).
    - 타이틀: `home_portrait.png`
@@ -44,18 +44,25 @@ node design/title-icon/make-title-icon.cjs
 ```text
 Create a tall vertical mobile game title screen background, aspect ratio 9:16 (portrait), highest resolution.
 
-STYLE: clean, detailed 16-bit retro arcade pixel art, bright and cheerful, like a modern pixel-art game. Crisp pixel edges, limited palette, simple cel shading. Same style as the attached sprite and skyline references if provided.
+STYLE: clean, detailed 16-bit retro arcade pixel art, bright and cheerful, like a modern pixel-art game. Crisp pixel edges, limited palette, simple cel shading. Match the pixel style and the four characters of the attached sprite references exactly.
 
-SCENE: a sunny late-afternoon city riverside walking path seen from behind and slightly above, the path running straight away from the viewer to a vanishing point near the middle of the image. The path is a plain red-brown rubber (urethane) jogging track with NO lane lines or markings, pale stone curbs on both sides, green grass and small round bushes beside it, and short park lamps with round globes along the edges. Far away on the horizon: a soft, low, slightly hazy city skyline with a river glint (Seoul-like, Namsan tower silhouette is fine) under a warm gradient sky with a few flat pixel clouds.
+SCENE: a warm sunset over a city riverside walking path, seen from behind and slightly above. The path runs straight away from the viewer to a vanishing point. It is a plain red-brown rubber (urethane) jogging track with NO lane lines, no dashes and no markings, pale stone curbs on both sides, green grass and small round bushes beside it, and short park lamps with round glowing globes along the edges. Far away on the horizon: a soft, low, slightly hazy Seoul-like skyline (Namsan tower silhouette, one tall slim tower, apartment blocks) with a river glint, under a warm purple-to-orange gradient sky with a few flat pixel clouds.
+
+THE FOUR CHARACTERS (copy the attached references; all seen from directly behind, moving away from the viewer, side by side, each in its own part of the path, all about the same height):
+1. a jogger mid-stride: short dark hair under a red cap, sky-blue T-shirt, black shorts, small waist belt with a water bottle, white running shoes with neon-green soles, one foot kicked up behind;
+2. a cyclist on a city bicycle: red helmet, sky-blue jersey, black backpack, front basket, legs pedalling;
+3. an inline skater mid-push: red helmet, sky-blue long-sleeve top, black leggings, knee pads, black-and-white inline skates with red wheels, one leg pushing out to the side;
+4. a kick-scooter rider: red helmet, sky-blue hoodie, black backpack, dark pants, standing on the narrow deck with both hands on the handlebar.
+Energetic, playful, mid-motion, nobody falling.
 
 COMPOSITION (very important, vertical positions from the top of the image):
-- 0%-40%: sky and the far skyline only, calm and low in detail, with the horizon at about 38%. Leave this area open: a game logo and a button will be drawn on top of it later.
-- 40%-55%: the far part of the walking path, empty.
-- 55%-90%: four friendly characters side by side, seen from directly behind, moving away from the viewer along the path, each in its own lane, all about the same height: a jogger, a cyclist on a city bike, a kick-scooter rider, and an inline skater mid-stride (red helmet, black leggings, inline skates). All four wear the same team colors: bright red cap or helmet and sky-blue top. Energetic, playful, mid-motion.
-- 90%-100%: just the near path, no characters.
+- 0%-40%: sky and the far skyline only, calm and low in detail, with the horizon at about 40%. Leave this area open: the game logo will be drawn on top of it later.
+- 40%-48%: the far part of the walking path, empty.
+- 48%-84%: the four characters, their feet at about 80%-84%.
+- 84%-100%: just the near path in front of them, empty and plain: a button will be drawn on top of it later.
 - Keep everything important within the central 88% of the width; the sides may be cropped.
 
-DO NOT INCLUDE: any text, letters, numbers, logos, titles, signage letters, watermarks, UI, buttons, borders, frames; cars or traffic; anyone falling or getting hurt; photo-realism or 3D render look.
+DO NOT INCLUDE: any text, letters, numbers, logos, titles, signage letters, watermarks, UI, buttons, borders, frames; cars, delivery carts or other traffic; lane lines; anyone falling or getting hurt; photo-realism or 3D render look.
 ```
 
 ## 3. 앱 아이콘 프롬프트
