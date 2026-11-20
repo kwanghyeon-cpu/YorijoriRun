@@ -103,7 +103,8 @@ import kotlin.math.sin
 private const val STRIPE_LENGTH = 1f
 
 /** Speedometer scale: world units per second to the KM/H shown in the HUD. */
-private const val KMH_PER_UNIT = 7f
+// Path speeds, not car speeds: the engine's 20..33 units read as about 15..25 km/h.
+private const val KMH_PER_UNIT = 0.75f
 
 // Lane dividers are short dashes, like a real highway: one dash per DASH_PERIOD world units. Far
 // away a dash is thinner than a screen row and would shimmer, so past DASH_FADE_DISTANCE the
@@ -510,7 +511,7 @@ fun HighwayScreen(
         if (engine.status == GameStatus.GAME_OVER) {
             HighwayDialog(title = "GAME OVER") {
                 Text(
-                    text = if (engine.gameOverReason == GameOverReason.FUEL_EMPTY) "체력 소진" else "충돌 발생",
+                    text = if (engine.gameOverReason == GameOverReason.FUEL_EMPTY) "체력 소진" else "부딪혔어요",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 6.dp),

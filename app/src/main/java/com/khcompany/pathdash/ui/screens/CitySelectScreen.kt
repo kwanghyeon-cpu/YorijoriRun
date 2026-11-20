@@ -75,7 +75,7 @@ fun CitySelectScreen(
                 .padding(top = 12.dp)
                 .height(52.dp),
         ) {
-            Text(text = "다음: 자동차 선택", fontWeight = FontWeight.Bold)
+            Text(text = "다음: 탈것 선택", fontWeight = FontWeight.Bold)
         }
     }
 }

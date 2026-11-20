@@ -298,7 +298,7 @@ function showToast(text) {
 }
 
 function updateHud() {
-  document.getElementById('hud-speed-text').textContent = `${Math.round(engine.speed * 7)} KM/H`;
+  document.getElementById('hud-speed-text').textContent = `${Math.round(engine.speed * KMH_PER_UNIT)} KM/H`;
   document.querySelector('.controls-hint').style.opacity = engine.elapsedSeconds < 4 ? '1' : '0';
   setPowerupChip('hud-shield', engine.shieldTimeLeft, '방어막');
   setPowerupChip('hud-magnet', engine.magnetTimeLeft, '자석');
@@ -330,7 +330,7 @@ function showGameOver() {
   justSubmittedName = null;
   reportScore(engine.score);
   document.getElementById('gameover-reason').textContent =
-    engine.gameOverReason === 'FUEL_EMPTY' ? '체력 소진' : '충돌 발생';
+    engine.gameOverReason === 'FUEL_EMPTY' ? '체력 소진' : '부딪혔어요';
   document.getElementById('gameover-score').textContent = `SCORE ${engine.score}`;
   document.getElementById('gameover-best').textContent =
     engine.score >= state.highScore ? 'NEW BEST!' : `BEST ${state.highScore}`;

@@ -84,7 +84,7 @@ fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
                 fontWeight = FontWeight.Black,
             )
             Text(
-                text = "도시를 달리는 레트로 차선 러너",
+                text = "도시 산책로를 달리는 레트로 러너",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier

@@ -34,11 +34,15 @@ const CITIES = [
 ];
 
 const CARS = [
-  { id: 'suv', name: 'SUV', nameEn: 'SUV', rearSprite: 'assets/rear/car_rear_1.png' },
-  { id: 'sports_car', name: '스포츠카', nameEn: 'SPORTS CAR', rearSprite: 'assets/rear/car_rear_2.png' },
-  { id: 'sedan', name: '세단', nameEn: 'SEDAN', rearSprite: 'assets/rear/car_rear_3.png' },
-  { id: 'van', name: '승합차', nameEn: 'VAN', rearSprite: 'assets/rear/car_rear_4.png' },
+  { id: 'jogging', name: '조깅', nameEn: 'JOGGING', rearSprite: 'assets/rear/car_rear_1.png' },
+  { id: 'bicycle', name: '자전거', nameEn: 'BICYCLE', rearSprite: 'assets/rear/car_rear_2.png' },
+  { id: 'cart', name: '리어카', nameEn: 'CART', rearSprite: 'assets/rear/car_rear_3.png' },
+  { id: 'kickboard', name: '킥보드', nameEn: 'KICKBOARD', rearSprite: 'assets/rear/car_rear_4.png' },
 ];
 
 function cityById(id) { return CITIES.find(c => c.id === id) || CITIES[0]; }
 function carById(id) { return CARS.find(c => c.id === id) || CARS[0]; }
+
+// Speedometer scale, mirrors KMH_PER_UNIT in HighwayScreen.kt. Path speeds, not car speeds:
+// the engine's 20..33 units read as about 15..25 km/h.
+const KMH_PER_UNIT = 0.75;

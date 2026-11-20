@@ -50,7 +50,7 @@ fun CarSelectScreen(
             .padding(16.dp),
     ) {
         Text(
-            text = "자동차 선택",
+            text = "탈것 선택",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 10.dp),
