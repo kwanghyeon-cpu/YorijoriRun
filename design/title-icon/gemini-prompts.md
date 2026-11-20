@@ -95,4 +95,5 @@ DO NOT INCLUDE: any text, letters, numbers, logos, watermarks, borders, frames, 
 - 타이틀: 가운데를 기준으로 좌우를 잘라 1:2로 맞추고, 1080×2160으로 줄여 앱(`res/drawable-nodpi/home_portrait.png`)과 웹(`web/assets/ui/home_portrait.png`)에 넣습니다.
 - 아이콘: 마젠타 배경과 제미나이 별 표시(✦)를 지우고, 그림을 적응형 아이콘의 안전 영역(512px 그림에서 반지름 154px 원) 안에 맞춰 `res/drawable-nodpi/ic_launcher_foreground.png`로 넣습니다. 배경 층(`ic_launcher_background.png`, 보라색 그라데이션)은 그대로 둡니다.
   스토어용 512×512 아이콘(배경 + 그림)은 `design/icon/store_icon_512.png`로 만듭니다.
-- 아이콘을 바꾸면 지금 아이콘에 쓰인 Tabler 자동차 그림의 출처 표기(`NOTICE.md`)는 지웁니다.
+- 타이틀 오른쪽 아래의 제미나이 별 표시(✦)도 주변 색으로 채워 지웁니다.
+- 홈 화면의 PLAY 버튼은 앱·웹 모두 부제 바로 아래(위쪽 약 1/3)에 있어서, 캐릭터가 화면 가운데~아래에 있어도 가리지 않습니다.

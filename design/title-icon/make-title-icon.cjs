@@ -50,10 +50,29 @@ if (title) {
   const cropW = Math.min(w, Math.round(h * TITLE_W / TITLE_H));
   const cropH = Math.min(h, Math.round(cropW * TITLE_H / TITLE_W));
   const appOut = out(path.join(RES, 'home_portrait.png'));
+  const resized = path.join(TMP, 'title-resized.png');
   magick(title, '-gravity', 'center', '-crop', `${cropW}x${cropH}+0+0`, '+repage',
-    '-resize', `${TITLE_W}x${TITLE_H}!`, '-strip', '-define', 'png:compression-level=9', appOut);
+    '-resize', `${TITLE_W}x${TITLE_H}!`, resized);
+  // Gemini stamps a small, half-transparent white sparkle in the bottom-right corner, so it reads
+  // as a pale tint of whatever is under it (pale pink on the red track). Pale pixels whose green
+  // and blue stay level are taken as the sparkle; cream lane lines (green well above blue) and
+  // grass are left alone. They are filled with a median of their surroundings.
+  const sparkle = path.join(TMP, 'title-sparkle.png');
+  magick(resized, '-fx', `i>w*0.86 && j>h*0.90 && lightness>0.6 && abs(g-b)<0.08`, '-alpha', 'off',
+    '-morphology', 'Dilate', 'Disk:4', sparkle);
+  // The median window must be well wider than the sparkle, or it just repaints the sparkle; it
+  // runs on the corner only, since a window this size over the whole picture is slow.
+  const x0 = Math.floor(TITLE_W * 0.8);
+  const y0 = Math.floor(TITLE_H * 0.86);
+  const filled = path.join(TMP, 'title-filled.png');
+  magick(resized, '(', '+clone', '-crop', `${TITLE_W - x0}x${TITLE_H - y0}+${x0}+${y0}`, '+repage',
+    '-statistic', 'Median', '121x121', ')', '-geometry', `+${x0}+${y0}`, '-composite', filled);
+  magick(resized, filled, sparkle, '-composite', '-strip', '-define', 'png:compression-level=9', appOut);
+  fs.rmSync(filled);
+  const cleared = Number(magick(sparkle, '-format', '%[fx:mean*w*h]', 'info:'));
+  fs.rmSync(resized); fs.rmSync(sparkle);
   if (!dry) fs.copyFileSync(appOut, path.join(ROOT, 'web/assets/ui/home_portrait.png'));
-  console.log(`타이틀: ${path.basename(title)} ${w}x${h} -> 가운데 ${cropW}x${cropH} 잘라 ${TITLE_W}x${TITLE_H}` +
+  console.log(`타이틀: ${path.basename(title)} ${w}x${h} -> 가운데 ${cropW}x${cropH} 잘라 ${TITLE_W}x${TITLE_H}, 구석 표시 ${Math.round(cleared)}px 지움` +
     (Math.abs(w / h - 9 / 16) > 0.02 ? '  ← 9:16이 아님, 많이 잘렸을 수 있음' : ''));
   done++;
 }
@@ -75,9 +94,17 @@ if (icon) {
   magick(cut, '(', '+clone', '-alpha', 'off', '-fill', OUTLINE, '-colorize', '100', ')',
     '(', '-clone', '0', '-fx', `a>0.2 && ${PINKISH}`, '-alpha', 'off', ')', '-composite', cut);
 
-  // Scale so the trimmed art's corners stay inside the safe circle, then center it on 512x512.
+  // Scale so the art's farthest opaque pixel from its center stays inside the safe circle (tighter
+  // than fitting the bounding box's diagonal), then center it on 512x512.
   const [cw, ch] = size(cut);
-  const scale = (SAFE_RADIUS * 2) / Math.hypot(cw, ch);
+  const alpha = execFileSync('magick', [cut, '-alpha', 'extract', '-depth', '8', 'gray:-'], { maxBuffer: 1 << 28 });
+  let reach = 0;
+  for (let y = 0; y < ch; y++) {
+    for (let x = 0; x < cw; x++) {
+      if (alpha[y * cw + x] > 127) reach = Math.max(reach, Math.hypot(x + 0.5 - cw / 2, y + 0.5 - ch / 2));
+    }
+  }
+  const scale = SAFE_RADIUS / reach;
   const fw = Math.round(cw * scale);
   const fh = Math.round(ch * scale);
   const fg = out(path.join(RES, 'ic_launcher_foreground.png'));

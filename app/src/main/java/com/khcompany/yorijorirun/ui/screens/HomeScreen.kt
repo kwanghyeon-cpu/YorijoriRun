@@ -35,14 +35,14 @@ import com.khcompany.yorijorirun.R
 private val PillBackground = Color(0xFF120B22).copy(alpha = 0.62f)
 
 /**
- * Portrait title screen: the logo sits in the sky of the road scene, the PLAY button on the
- * road, and the player's car stays visible at the bottom.
+ * Portrait title screen: the logo and the PLAY button sit in the sky and far path of the scene,
+ * so the four riders in the lower half of the picture stay in view (same layout as the web build).
  */
 @Composable
 fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Anchored toward the top (the car sits ~87% down, so it survives the crop even on 16:9
-        // screens) to keep the skyline behind the logo.
+        // Anchored toward the top (the riders sit ~60-82% down, so they survive the crop even on
+        // 16:9 screens) to keep the skyline behind the logo.
         Image(
             painter = painterResource(R.drawable.home_portrait),
             contentDescription = null,
@@ -92,7 +92,8 @@ fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
                     .background(PillBackground, RoundedCornerShape(50))
                     .padding(horizontal = 16.dp, vertical = 6.dp),
             )
-            Spacer(modifier = Modifier.weight(0.52f))
+            // PLAY follows the subtitle directly; the free space goes below it, over the riders.
+            Spacer(modifier = Modifier.height(24.dp))
             if (highScore > 0) {
                 Text(
                     text = "BEST  $highScore",
@@ -120,7 +121,7 @@ fun HomeScreen(highScore: Int, onPlay: () -> Unit) {
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
-            Spacer(modifier = Modifier.weight(0.30f))
+            Spacer(modifier = Modifier.weight(0.82f))
         }
     }
 }

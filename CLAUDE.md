@@ -28,12 +28,13 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 스토어 스크린샷 생성: `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`
 - 배경 가공: `design/city-backdrops/make-backdrops.cjs`, 제미나이 프롬프트 예시 `design/city-backdrops/gemini-prompts.md`
 - 탈것·장애물 그림 가공: `node design/sprites/make-sprites.cjs` (`--dry`는 임시 폴더에만 저장), 프롬프트 `design/sprites/gemini-prompts.md`. 원본은 `design/sprites/gemini-originals/`(커밋 안 함)
-- 타이틀·앱 아이콘 가공: `node design/title-icon/make-title-icon.cjs` (`--dry` 가능), 프롬프트 `design/title-icon/gemini-prompts.md`. 원본 `home_portrait.*`·`app_icon.*`은 `design/title-icon/gemini-originals/`(커밋 안 함). 아이콘을 바꾸면 `NOTICE.md`의 Tabler 자동차 출처 표기를 지운다.
+- 타이틀·앱 아이콘 가공: `node design/title-icon/make-title-icon.cjs` (`--dry` 가능), 프롬프트 `design/title-icon/gemini-prompts.md`. 원본 `home_portrait.*`·`app_icon.*`은 `design/title-icon/gemini-originals/`(커밋 안 함). 스토어 아이콘은 `design/icon/store_icon_512.png`. `design/icon/make_icon.mjs`와 svg들은 Lane Dash 시절 자동차 아이콘용이라 쓰지 않는다.
 
 ## 진행 상황
 
 - 남은 계정 작업과 교체할 그림 목록은 `NEW_GAME_SETUP.md`.
-- 탈것 4종과 장애물 그림은 새것으로 교체함. 타이틀 화면, 앱 아이콘, 효과음은 아직 Lane Dash 것.
+- 그림(탈것 4종, 장애물, 타이틀 화면, 앱 아이콘)은 모두 새것으로 교체함. 효과음만 아직 Lane Dash 것.
+- 홈 화면은 앱·웹 모두 로고와 PLAY 버튼을 위쪽에 두고, 아래쪽은 타이틀 그림의 네 탈것이 보이게 비워 둔다.
 - 장애물 종류 이름은 Lane Dash 그대로다: SEDAN=자전거 탄 사람, SUV=강아지 산책, BUS=러닝 크루, TRUCK=배달 오토바이, CONE=라바콘, BARRIER=포트홀. 그림 크기는 `drawHalfWidth`, 충돌은 `halfWidth`로 따로 정한다.
 - GitHub 원격 저장소 없음(로컬 git만).
 - 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

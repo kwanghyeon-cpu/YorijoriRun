@@ -36,21 +36,24 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 
 ## 교체할 그림·소리
 
-탈것 4종과 장애물 6종 그림은 교체를 마쳤습니다(2026-11-20, 제미나이 원본 → `make-sprites.cjs`).
-남은 것은 타이틀 화면·앱 아이콘과 효과음이고, 도시 배경은 그대로 씁니다.
+그림은 모두 교체를 마쳤습니다(2026-11-20). 남은 것은 **효과음**뿐이고, 도시 배경은 그대로 씁니다.
 
-| 파일 | 새 내용 |
-|---|---|
-| `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·리어카·킥보드 (뒷모습, 순서대로 1~4) |
-| `traffic_rear_*.png` (움직이는 장애물 4칸, 같은 방향으로 가는 뒷모습) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 |
-| `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘(지금 그림 그대로 써도 됨) |
+| 파일 | 내용 | 상태 |
+|---|---|---|
+| `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·리어카·킥보드 (뒷모습, 순서대로 1~4) | 교체함 |
+| `traffic_rear_*.png` (움직이는 장애물 4칸) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 | 교체함 |
+| `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘 | 교체함 |
+| `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 |
+| `ic_launcher_foreground.png`, `design/icon/store_icon_512.png` | 요리조리 피하는 러너 아이콘 (배경 층은 보라색 그라데이션 그대로) | 교체함 |
+| `city_*.png` | 길 건너편 도시 | 그대로 씀 |
+| 효과음 (`res/raw`, `web/assets`) | 발소리·자전거 벨 등 | **남음** |
 
-그림 10장의 제미나이 프롬프트는 `design/sprites/gemini-prompts.md`에 있습니다. 받은 그림을
-`design/sprites/gemini-originals/`에 같은 파일 이름으로 넣고 `node design/sprites/make-sprites.cjs`를 실행하면
-배경을 지우고 폭을 맞춰 앱·웹에 함께 넣습니다. 그림을 넣은 뒤에는 종류별 화면 폭(`TRAFFIC_KINDS`의 `halfWidth`)을 다시 맞춥니다.
-| `city_*.png` | 그대로 써도 됨 (길 건너편 도시) |
-| `home_portrait.png`, 앱 아이콘 | 새 타이틀 화면, 새 아이콘. 프롬프트 `design/title-icon/gemini-prompts.md`, 받은 그림은 `design/title-icon/gemini-originals/`에 `home_portrait.png`·`app_icon.png`로 저장 → `node design/title-icon/make-title-icon.cjs` |
-| 효과음 (`res/raw`, `web/assets`) | 발소리·자전거 벨 등 |
+그림을 다시 만들 때:
+- 탈것·장애물: 프롬프트 `design/sprites/gemini-prompts.md` → `design/sprites/gemini-originals/`에 같은 파일 이름으로 저장 →
+  `node design/sprites/make-sprites.cjs`. 그림 크기가 달라지면 `TRAFFIC_KINDS`의 `drawHalfWidth`를 다시 맞춥니다.
+- 타이틀·아이콘: 프롬프트 `design/title-icon/gemini-prompts.md` → `design/title-icon/gemini-originals/`에
+  `home_portrait.png`·`app_icon.png`로 저장 → `node design/title-icon/make-title-icon.cjs`.
+- Play Console에는 `design/icon/store_icon_512.png`를 고해상도 아이콘으로 올립니다.
 
 코드 쪽 남은 일: 없음(그림·소리 교체만 남음).
 (문구 정리·속도계도 끝남. 탈것 이름은 조깅·자전거·리어카·킥보드, 속도계는 15~25 km/h, 게임오버는 "부딪혔어요".)
