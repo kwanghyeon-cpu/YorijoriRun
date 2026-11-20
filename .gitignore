@@ -22,3 +22,4 @@ local.properties
 # Gemini originals for sprites are large source images; only the processed sprites are committed.
 /design/sprites/gemini-originals/
 /design/title-icon/gemini-originals/
+/design/sounds/originals/

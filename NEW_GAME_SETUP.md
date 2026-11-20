@@ -46,7 +46,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 | `home_portrait.png` (앱 `drawable-nodpi`, 웹 `assets/ui`) | 강변 산책로와 네 탈것 타이틀 화면 | 교체함 |
 | `ic_launcher_foreground.png`, `design/icon/store_icon_512.png` | 요리조리 피하는 러너 아이콘 (배경 층은 보라색 그라데이션 그대로) | 교체함 |
 | `city_*.png` | 길 건너편 도시 | 그대로 씀 |
-| 효과음 (`res/raw`, `web/assets`) | 발소리·자전거 벨 등 | **남음** |
+| 효과음 7개 (`res/raw`, `web/assets/sfx`, `web/assets/bgm`) | 무료 사이트에서 고르기. 고르는 법과 검색어는 `design/sounds/README.md`, 출처는 `design/sounds/SOURCES.md`에 적기 → `design/sounds/originals/`에 저장 → `node design/sounds/make-sounds.cjs` | **남음** |
 
 그림을 다시 만들 때:
 - 탈것·장애물: 프롬프트 `design/sprites/gemini-prompts.md` → `design/sprites/gemini-originals/`에 같은 파일 이름으로 저장 →
