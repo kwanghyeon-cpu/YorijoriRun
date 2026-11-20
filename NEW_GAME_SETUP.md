@@ -14,7 +14,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
 
 ## 이미 분리해 둔 것
 - **패키지**: `com.khcompany.yorijorirun` (Lane Dash와 별개의 앱)
-- **버전**: 0.1.0 (versionCode 1)
+- **버전**: 1.0.0 (versionCode 1) — 첫 출시 버전
 - **광고**: Lane Dash의 AdMob ID를 지우고, 이 게임 전용 AdMob 앱의 ID를 넣음 (`AndroidManifest.xml`, `ads/AdManager.kt`)
 - **순위표**: 컬렉션을 `scores_yorijorirun`로 분리 (앱·웹), `firestore.rules`도 이 컬렉션만 열도록 정리
 - **웹 저장 키**: `yorijori_run_*` (같은 github.io 도메인에서 Lane Dash 기록과 섞이지 않음)
@@ -31,7 +31,7 @@ node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이�
    전면 `…/6180270589`, 보상형 `…/4675617223`을 넣음(디버그 빌드는 계속 Google 샘플 광고). 유럽·영국용 동의 화면(UMP)은 아직 없음.
    `app-ads.txt`는 개발자 사이트에 이미 있으면 그대로 됩니다.
 4. **Play Console**: 새 앱 만들기, 스토어 등록정보, 콘텐츠 등급, 개인정보처리방침 주소.
-   스토어 문구·카테고리·콘텐츠 등급·데이터 보안 답변 초안은 `store-listing.md`, 스크린샷 7장은 `store-assets/screenshots-0.1/`
+   스토어 문구·카테고리·콘텐츠 등급·데이터 보안 답변 초안은 `store-listing.md`, 스크린샷 7장은 `store-assets/screenshots-1.0/`
    (커밋 안 함, 도구로 다시 만들 수 있음), 개인정보처리방침은 `privacy-policy.md`(2026-11-20 새 앱 기준으로 고침).
    피처 그래픽(1024×500)은 `design/icon/feature_graphic.png`(`node design/title-icon/make-feature-graphic.cjs`).
    개인 개발자 계정은 새 앱마다 비공개 테스트 요건이 있을 수 있으니 콘솔에서 확인.
