@@ -19,7 +19,6 @@ data class CityTheme(
     val skyTop: Color,
     val skyBottom: Color,
     val roadColor: Color,
-    val roadLineColor: Color,
     /** Drawable name (no extension) of the tileable skyline backdrop, e.g. "city_seoul". */
     val spriteName: String = "",
     /**
@@ -37,6 +36,12 @@ data class CarOption(
     val roofColor: Color,
     /** Behind-the-car sprite (drawable name, no extension); empty falls back to a placeholder drawing. */
     val rearSpriteName: String = "",
+    /**
+     * Draws the sprite this much wider than [HighwayEngine.PLAYER_DRAW_WIDTH]. Only the picture:
+     * collisions use PLAYER_HALF_WIDTH for every ride. The cart is a wide, short sprite and would
+     * look tiny next to the tall riders. Mirrors `drawScale` in the web catalog.js.
+     */
+    val drawScale: Float = 1f,
 )
 
 object GameCatalog {
@@ -49,7 +54,6 @@ object GameCatalog {
             skyTop = Color(0xFF2E1A47),
             skyBottom = Color(0xFFFF8C69),
             roadColor = Color(0xFF7A3B2E),
-            roadLineColor = Color(0xFFF2E6D0),
             spriteName = "city_seoul",
             haze = Color(0xFFD39A8E),
         ),
@@ -60,7 +64,6 @@ object GameCatalog {
             skyTop = Color(0xFF05021A),
             skyBottom = Color(0xFF1B0F3D),
             roadColor = Color(0xFF232B45),
-            roadLineColor = Color(0xFF8FE3FF),
             spriteName = "city_tokyo",
             haze = Color(0xFFA3B8DA),
         ),
@@ -71,7 +74,6 @@ object GameCatalog {
             skyTop = Color(0xFFFF9A56),
             skyBottom = Color(0xFFFFD56B),
             roadColor = Color(0xFF55606B),
-            roadLineColor = Color(0xFFFFFFFF),
             spriteName = "city_newyork",
             haze = Color(0xFF9DCBE6),
         ),
@@ -82,7 +84,6 @@ object GameCatalog {
             skyTop = Color(0xFFBFE3FF),
             skyBottom = Color(0xFFF6E7D8),
             roadColor = Color(0xFFA08A68),
-            roadLineColor = Color(0xFFFFF8EC),
             spriteName = "city_paris",
             haze = Color(0xFF2B556B),
         ),
@@ -112,6 +113,7 @@ object GameCatalog {
             bodyColor = Color(0xFF3D8BFF),
             roofColor = Color(0xFF1A2340),
             rearSpriteName = "car_rear_3",
+            drawScale = 1.5f,
         ),
         CarOption(
             id = "kickboard",

@@ -78,8 +78,6 @@ import com.khcompany.yorijorirun.game.GameOverReason
 import com.khcompany.yorijorirun.game.LeaderboardRepository
 import com.khcompany.yorijorirun.game.highway.HW_DRAW_DISTANCE
 import com.khcompany.yorijorirun.game.highway.HW_HORIZON_FRACTION
-import com.khcompany.yorijorirun.game.highway.HW_LANE_COUNT
-import com.khcompany.yorijorirun.game.highway.HW_LANE_SPACING
 import com.khcompany.yorijorirun.game.highway.HW_PLAYER_T
 import com.khcompany.yorijorirun.game.highway.fadeForDz
 import com.khcompany.yorijorirun.game.highway.roadHalfWidth
@@ -94,7 +92,6 @@ import com.khcompany.yorijorirun.ui.components.SpriteCache
 import com.khcompany.yorijorirun.ui.components.drawCitySkylineSprite
 import com.khcompany.yorijorirun.ui.components.drawGroundShadow
 import com.khcompany.yorijorirun.ui.components.drawRoadHaze
-import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -106,12 +103,8 @@ private const val STRIPE_LENGTH = 1f
 // Path speeds, not car speeds: the engine's 20..33 units read as about 15..25 km/h.
 private const val KMH_PER_UNIT = 0.75f
 
-// Lane dividers are short dashes, like a real highway: one dash per DASH_PERIOD world units. Far
-// away a dash is thinner than a screen row and would shimmer, so past DASH_FADE_DISTANCE the
-// divider is drawn as a faint continuous line instead.
-private const val DASH_PERIOD = 1.2f
-private const val DASH_FRACTION = 0.33f
-private const val DASH_FADE_DISTANCE = 14f
+// The path has no lane markings (a walking path, not a road); the five lanes are only in the game
+// logic. The light/dark bands across the path still show the speed.
 
 /** Scale applied to the road layer so its vibration never exposes an empty edge. */
 private const val SHAKE_ZOOM = 1.02f
@@ -171,8 +164,6 @@ fun HighwayScreen(
     val roadDark = remember { Path() }
     val rumbleRed = remember { Path() }
     val rumbleWhite = remember { Path() }
-    val laneMarks = remember { Path() }
-    val laneMarksFar = remember { Path() }
     val roadside = remember { RoadsideBatch() }
 
     DisposableEffect(Unit) {
@@ -266,7 +257,7 @@ fun HighwayScreen(
             drawRect(grassLight, Offset(0f, horizonY), Size(w, roadH))
 
             darkGrass.reset(); roadLight.reset(); roadDark.reset()
-            rumbleRed.reset(); rumbleWhite.reset(); laneMarks.reset(); laneMarksFar.reset()
+            rumbleRed.reset(); rumbleWhite.reset()
             for (i in 0 until strips.count) {
                 val top = strips.yTop[i]
                 val bottom = strips.yBottom[i] + 0.5f
@@ -279,25 +270,12 @@ fun HighwayScreen(
                 rumblePath.addRect(Rect(cx - hw - rumble, top, cx - hw, bottom))
                 rumblePath.addRect(Rect(cx + hw, top, cx + hw + rumble, bottom))
                 (if (odd) roadDark else roadLight).addRect(Rect(cx - hw, top, cx + hw, bottom))
-                val depth = strips.dz[i]
-                val dashPhase = (engine.z + depth) / DASH_PERIOD
-                val far = depth > DASH_FADE_DISTANCE
-                if (far || dashPhase - floor(dashPhase) < DASH_FRACTION) {
-                    val half = hw * 0.02f
-                    val marks = if (far) laneMarksFar else laneMarks
-                    for (divider in 1 until HW_LANE_COUNT) {
-                        val x = cx + (-1f + HW_LANE_SPACING * divider) * hw
-                        marks.addRect(Rect(x - half, top, x + half, bottom))
-                    }
-                }
             }
             drawPath(darkGrass, grassDark)
             drawPath(rumbleRed, CURB_SHADE)
             drawPath(rumbleWhite, CURB_LIGHT)
             drawPath(roadLight, lerp(city.roadColor, Color.White, 0.10f))
             drawPath(roadDark, lerp(city.roadColor, Color.White, 0.05f))
-            drawPath(laneMarksFar, city.roadLineColor.copy(alpha = 0.4f))
-            drawPath(laneMarks, city.roadLineColor.copy(alpha = 0.9f))
             drawRoadside(
                 batch = roadside,
                 strips = strips,
@@ -380,7 +358,7 @@ fun HighwayScreen(
             // The road is fixed at the bottom of the screen: the car moves across it.
             val playerHalf = roadHalfWidth(HW_PLAYER_T, w)
             val playerCx = strips.centerXAt(playerY, h, rowH) + engine.playerX * playerHalf
-            val playerWidth = HighwayEngine.PLAYER_DRAW_WIDTH * playerHalf
+            val playerWidth = HighwayEngine.PLAYER_DRAW_WIDTH * playerHalf * car.drawScale
             val sprite = playerSprite
             val playerHeight = if (sprite != null) playerWidth * sprite.height / sprite.width else playerWidth * 0.8f
             if (sprite != null) {

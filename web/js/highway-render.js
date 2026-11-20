@@ -4,12 +4,8 @@
 
 const HW_STRIPE_LENGTH = 1;
 
-// Lane dividers are short dashes, like a real highway: one dash per HW_DASH_PERIOD world units. Far
-// away a dash is thinner than a screen row and would shimmer, so past HW_DASH_FADE_DISTANCE the
-// divider is drawn as a faint continuous line instead.
-const HW_DASH_PERIOD = 1.2;
-const HW_DASH_FRACTION = 0.33;
-const HW_DASH_FADE_DISTANCE = 14;
+// The path has no lane markings (a walking path, not a road); the five lanes are only in the game
+// logic. The light/dark bands across the path still show the speed.
 const HW_GRASS = '#2E7D32';
 const HW_GRASS_DARK = '#276B2A';
 // The path's edge is a pale stone curb in two shades (Lane Dash had red-and-white racing kerbs).
@@ -187,8 +183,6 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   const roadDark = new Path2D();
   const rumbleRed = new Path2D();
   const rumbleWhite = new Path2D();
-  const laneMarks = new Path2D();
-  const laneMarksFar = new Path2D();
   for (let i = 0; i < hwStrips.count; i++) {
     const top = hwStrips.yTop[i];
     const height = hwStrips.yBottom[i] + 0.5 - top;
@@ -201,16 +195,6 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     rumblePath.rect(cx - hw - rumble, top, rumble, height);
     rumblePath.rect(cx + hw, top, rumble, height);
     (odd ? roadDark : roadLight).rect(cx - hw, top, hw * 2, height);
-    const depth = hwStrips.dz[i];
-    const dashPhase = (engine.z + depth) / HW_DASH_PERIOD;
-    const far = depth > HW_DASH_FADE_DISTANCE;
-    if (far || dashPhase - Math.floor(dashPhase) < HW_DASH_FRACTION) {
-      const half = hw * 0.02;
-      const marks = far ? laneMarksFar : laneMarks;
-      for (let divider = 1; divider < HW_LANE_COUNT; divider++) {
-        marks.rect(cx + (-1 + HW_LANE_SPACING * divider) * hw - half, top, half * 2, height);
-      }
-    }
   }
   ctx.fillStyle = mixHex(HW_GRASS_DARK, city.haze, 0.2);
   ctx.fill(darkGrass);
@@ -222,10 +206,6 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   ctx.fill(roadLight);
   ctx.fillStyle = mixHex(city.roadColor, '#FFFFFF', 0.05);
   ctx.fill(roadDark);
-  ctx.fillStyle = hexA(city.roadLineColor, 0.4);
-  ctx.fill(laneMarksFar);
-  ctx.fillStyle = hexA(city.roadLineColor, 0.9);
-  ctx.fill(laneMarks);
 
   drawHighwayRoadside(ctx, w, h, engine.z, horizonY, rowH, city);
   if (fancy) {
@@ -293,7 +273,7 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   const playerY = horizonY + roadH * HW_PLAYER_T;
   const playerHalf = roadHalfWidth(HW_PLAYER_T, w);
   const playerCx = hwStrips.centerXAt(playerY, h, rowH) + engine.playerX * playerHalf;
-  const playerWidth = HW.PLAYER_DRAW_WIDTH * playerHalf;
+  const playerWidth = HW.PLAYER_DRAW_WIDTH * playerHalf * (car.drawScale || 1);
   const playerImg = images[car.rearSprite];
   const playerHeight = playerImg && playerImg.naturalWidth ? playerWidth * playerImg.naturalHeight / playerImg.naturalWidth : playerWidth * 0.8;
   drawHighwayRearSprite(
