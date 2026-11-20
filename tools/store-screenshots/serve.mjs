@@ -5,7 +5,7 @@ import http from 'node:http'; import fs from 'node:fs'; import path from 'node:p
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(here, '..', '..', 'web');
-const outDir = path.resolve(here, '..', '..', 'store-assets', process.argv[2] || 'screenshots-3.1');
+const outDir = path.resolve(here, '..', '..', 'store-assets', process.argv[2] || 'screenshots-0.1');
 fs.mkdirSync(outDir, { recursive: true });
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.wav': 'audio/wav' };
 http.createServer((q, r) => {
