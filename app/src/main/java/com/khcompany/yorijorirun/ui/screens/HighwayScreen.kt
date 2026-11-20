@@ -100,7 +100,7 @@ import kotlin.math.sin
 private const val STRIPE_LENGTH = 1f
 
 /** Speedometer scale: world units per second to the KM/H shown in the HUD. */
-// Path speeds, not car speeds: the engine's 20..33 units read as about 15..25 km/h.
+// Path speeds, not car speeds: the steady 28-unit cruise reads as about 21 km/h (25..31 units by ride).
 private const val KMH_PER_UNIT = 0.75f
 
 // The path has no lane markings (a walking path, not a road); the five lanes are only in the game
@@ -193,7 +193,7 @@ fun HighwayScreen(
         playerSpriteB = SpriteCache.load(context, car.rearSpriteName + "_b")
         trafficSpritesB = TrafficKind.entries.associateWith { SpriteCache.load(context, it.spriteName + "_b") }
         ready = true
-        engine.start()
+        engine.start(car.id)
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             soundManager.startBgm()
         }
@@ -479,7 +479,7 @@ fun HighwayScreen(
                     ButtonLabel(GameIcon.PLAY, "계속하기")
                 }
                 Button(
-                    onClick = { engine.start() },
+                    onClick = { engine.start(car.id) },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -583,7 +583,7 @@ fun HighwayScreen(
                 ) {
                     ButtonLabel(GameIcon.SHARE, "공유하기", MaterialTheme.colorScheme.onBackground)
                 }
-                Button(onClick = { engine.start() }, modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = { engine.start(car.id) }, modifier = Modifier.fillMaxWidth()) {
                     ButtonLabel(GameIcon.RETRY, "RETRY")
                 }
                 Button(
@@ -689,7 +689,7 @@ private fun HighwayHud(engine: HighwayEngine, highScore: Int, modifier: Modifier
         val sinceLate = engine.elapsedSeconds - HighwayEngine.LATE_START_SECONDS
         if (engine.status == GameStatus.RUNNING && sinceLate in 0f..LEVEL_UP_SECONDS) {
             Text(
-                text = "LEVEL UP!  더 빨라져요",
+                text = "LEVEL UP!  더 촘촘해져요",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier

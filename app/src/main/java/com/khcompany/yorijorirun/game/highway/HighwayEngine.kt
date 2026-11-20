@@ -11,6 +11,7 @@ import com.khcompany.yorijorirun.game.GameStatus
 import com.khcompany.yorijorirun.game.ItemType
 import com.khcompany.yorijorirun.game.SfxEvent
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.ceil
 import kotlin.random.Random
 
@@ -50,6 +51,39 @@ class TrafficCar(
 ) {
     /** Set once the car is behind the player (near-miss bonus is judged at that moment). */
     var passed = false
+}
+
+/**
+ * What sets each ride apart (the character screen's bars). Defaults are the plain values; each ride trades
+ * one strength for one weakness (same table as RIDE_TRAITS in web/js/highway-engine.js):
+ *   jogging   quick side-steps and slow stamina loss, but the slowest (score climbs slowest)
+ *   bicycle   the fastest (score climbs fastest), but heavy side-steps
+ *   inline    a slightly wider near-miss window worth double, but stamina drains faster
+ *   kickboard shield and magnet last longer, but water bottles refill less
+ * [laneQuickness] scales the lane spring's frequency (spring x q^2, damping x q keeps the same overshoot).
+ * The inline near-miss margin stays under one lane spacing minus the two hitboxes, so passing something in
+ * the next lane while standing still does not count.
+ */
+data class RideTraits(
+    val speedScale: Float = 1f,
+    val laneQuickness: Float = 1f,
+    val drainScale: Float = 1f,
+    val nearMissMargin: Float = HighwayEngine.NEAR_MISS_MARGIN,
+    val nearMissScoreScale: Float = 1f,
+    val powerupScale: Float = 1f,
+    val refillScale: Float = 1f,
+) {
+    companion object {
+        val PLAIN = RideTraits()
+
+        fun forRide(rideId: String?): RideTraits = when (rideId) {
+            "jogging" -> RideTraits(speedScale = 0.9f, laneQuickness = 1.15f, drainScale = 0.9f)
+            "bicycle" -> RideTraits(speedScale = 1.1f, laneQuickness = 0.8f)
+            "inline" -> RideTraits(nearMissMargin = 0.115f, nearMissScoreScale = 2f, drainScale = 1.2f)
+            "kickboard" -> RideTraits(powerupScale = 1.6f, refillScale = 0.9f)
+            else -> PLAIN
+        }
+    }
 }
 
 /** A pickup lying on the road (fuel can, shield, magnet). Cans fly toward you under the magnet. */
@@ -95,7 +129,11 @@ class HighwayEngine(
      */
     var playerX by mutableFloatStateOf(0f)
         private set
-    var speed by mutableFloatStateOf(START_SPEED)
+    /** The ride's traits for the current run (set by [start]). */
+    var traits: RideTraits = RideTraits.PLAIN
+        private set
+
+    var speed by mutableFloatStateOf(CRUISE_SPEED)
         private set
     var score by mutableIntStateOf(0)
         private set
@@ -147,7 +185,9 @@ class HighwayEngine(
 
     private var pendingRoll = -1f
 
-    fun start() {
+    /** Starts a run with the given ride's traits (see [RideTraits.forRide]); null means plain values. */
+    fun start(rideId: String? = null) {
+        traits = RideTraits.forRide(rideId)
         traffic.clear()
         items.clear()
         status = GameStatus.RUNNING
@@ -158,7 +198,7 @@ class HighwayEngine(
         laneIndex = HW_LANE_CENTERS.size / 2
         playerX = HW_LANE_CENTERS[laneIndex]
         lateralVelocity = 0f
-        speed = START_SPEED
+        speed = CRUISE_SPEED * traits.speedScale
         score = 0
         bonusScore = 0
         fuel = MAX_FUEL
@@ -216,21 +256,19 @@ class HighwayEngine(
         shieldTimeLeft = (shieldTimeLeft - dt).coerceAtLeast(0f)
         magnetTimeLeft = (magnetTimeLeft - dt).coerceAtLeast(0f)
 
-        // Difficulty (speed, how tight the gaps are) eases from 0 to 1 over RAMP_SECONDS; traffic
-        // density ramps up much faster, over DENSITY_RAMP_SECONDS, so the road fills early.
+        // Difficulty (how tight the gaps are) eases from 0 to 1 over RAMP_SECONDS; traffic density
+        // ramps up much faster, over DENSITY_RAMP_SECONDS, so the road fills early.
         val difficulty = (elapsedSeconds / RAMP_SECONDS).coerceIn(0f, 1f)
         val density = (elapsedSeconds / DENSITY_RAMP_SECONDS).coerceIn(0f, 1f)
-        // After the ramp the game keeps tightening: speed, traffic, static obstacles, gates and fuel use.
+        // After the ramp the game keeps tightening: gaps, traffic, static obstacles, gates and fuel use.
         late = ((elapsedSeconds - LATE_START_SECONDS) / LATE_RAMP_SECONDS).coerceIn(0f, 1f)
 
-        // Speed: auto-accelerates toward a top speed that creeps up with difficulty.
-        val topSpeed = EARLY_TOP_SPEED + (MAX_SPEED - EARLY_TOP_SPEED) * difficulty + LATE_SPEED_BONUS * late
-        speed = minOf(topSpeed, speed + ACCELERATION * dt)
+        // Speed stays the ride's cruising speed for the whole run.
         z += speed * dt
         heading += curveAt(z) * speed * dt
 
         // Fuel drains all the time; cans and near misses refill it.
-        fuel = (fuel - (FUEL_DRAIN_PER_SECOND + LATE_FUEL_DRAIN * late) * dt).coerceAtLeast(0f)
+        fuel = (fuel - (FUEL_DRAIN_PER_SECOND + LATE_FUEL_DRAIN * late) * traits.drainScale * dt).coerceAtLeast(0f)
         if (!fuelWarningPlayed && fuel <= MAX_FUEL * 0.2f) {
             fuelWarningPlayed = true
             onSfx(SfxEvent.FUEL_LOW_WARNING)
@@ -247,8 +285,11 @@ class HighwayEngine(
         val steps = ceil(dt / LATERAL_STEP).toInt().coerceAtLeast(1)
         val h = dt / steps
         val push = curveAt(z + HW_PLAYER_DZ) * (speed / MAX_SPEED) * CENTRIFUGAL
+        val q = traits.laneQuickness
+        val spring = LANE_SPRING * q * q
+        val damping = LANE_DAMPING * q
         repeat(steps) {
-            lateralVelocity += (LANE_SPRING * (laneX - playerX) - LANE_DAMPING * lateralVelocity) * h
+            lateralVelocity += (spring * (laneX - playerX) - damping * lateralVelocity) * h
             playerX += (lateralVelocity - push) * h
         }
 
@@ -282,8 +323,8 @@ class HighwayEngine(
             }
             if (!car.passed && relative < -COLLISION_DEPTH) {
                 car.passed = true
-                if (lateral < PLAYER_HALF_WIDTH + OBSTACLE_HALF_WIDTH + NEAR_MISS_MARGIN) {
-                    bonusScore += NEAR_MISS_SCORE
+                if (lateral < PLAYER_HALF_WIDTH + OBSTACLE_HALF_WIDTH + traits.nearMissMargin) {
+                    bonusScore += (NEAR_MISS_SCORE * traits.nearMissScoreScale).roundToInt()
                     fuel = (fuel + NEAR_MISS_FUEL).coerceAtMost(MAX_FUEL)
                     nearMissCount++
                     nearMissFlash = NEAR_MISS_FLASH_SECONDS
@@ -321,18 +362,18 @@ class HighwayEngine(
         when (item.type) {
             ItemType.FUEL -> {
                 bonusScore += ITEM_SCORE_BONUS
-                fuel = (fuel + FUEL_REFILL_AMOUNT).coerceAtMost(MAX_FUEL)
+                fuel = (fuel + FUEL_REFILL_AMOUNT * traits.refillScale).coerceAtMost(MAX_FUEL)
                 fuelCollected++
                 onSfx(SfxEvent.COIN)
             }
             ItemType.SHIELD -> {
                 bonusScore += POWERUP_SCORE_BONUS
-                shieldTimeLeft = SHIELD_DURATION_SECONDS
+                shieldTimeLeft = SHIELD_DURATION_SECONDS * traits.powerupScale
                 onSfx(SfxEvent.POWERUP)
             }
             ItemType.MAGNET -> {
                 bonusScore += POWERUP_SCORE_BONUS
-                magnetTimeLeft = MAGNET_DURATION_SECONDS
+                magnetTimeLeft = MAGNET_DURATION_SECONDS * traits.powerupScale
                 onSfx(SfxEvent.POWERUP)
             }
         }
@@ -434,7 +475,7 @@ class HighwayEngine(
         for (lane in order) {
             val fair = traffic.none { other ->
                 !other.passed &&
-                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(abs(lane - laneOf(other.lx)), difficulty)
+                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(abs(lane - laneOf(other.lx)), difficulty, late)
             }
             if (!fair) return false
         }
@@ -460,7 +501,7 @@ class HighwayEngine(
         for (lane in obstacleLaneOrder()) {
             val fair = traffic.none { other ->
                 !other.passed &&
-                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(abs(lane - laneOf(other.lx)), difficulty)
+                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(abs(lane - laneOf(other.lx)), difficulty, late)
             }
             if (!fair) continue
             laneLastSpawn[lane] = elapsedSeconds
@@ -471,13 +512,16 @@ class HighwayEngine(
     }
 
     companion object {
-        const val START_SPEED = 20f
-
-        /** Top speed at the start of a run; it climbs to [MAX_SPEED] over [RAMP_SECONDS]. */
-        const val EARLY_TOP_SPEED = 27f
+        /**
+         * The run moves at one steady speed from start to finish ([CRUISE_SPEED] times the ride's
+         * speedScale); difficulty comes from denser, tighter obstacles instead. [MAX_SPEED] is only a
+         * yardstick for the animation cadence and the bend push.
+         */
+        const val CRUISE_SPEED = 28f
         const val MAX_SPEED = 33f
+
+        /** Gaps between obstacles tighten from easy to hard over RAMP_SECONDS. */
         const val RAMP_SECONDS = 120f
-        const val ACCELERATION = 1.4f
 
         /**
          * The lane-chasing spring: ~22 rad/s with a damping ratio of ~0.7, so a lane takes about
@@ -536,9 +580,9 @@ class HighwayEngine(
         const val MAGNET_PULL_RATE = 10f
 
         // Spawn events: seconds between attempts, easy -> hard, over DENSITY_RAMP_SECONDS.
-        const val DENSITY_RAMP_SECONDS = 40f
+        const val DENSITY_RAMP_SECONDS = 25f
         const val SPAWN_EASY_INTERVAL = 0.72f
-        const val SPAWN_HARD_INTERVAL = 0.3f
+        const val SPAWN_HARD_INTERVAL = 0.24f
         const val SPAWN_RETRY_INTERVAL = 0.08f
 
         /** Obstacle lane choice: noise (seconds) on how long a lane has been empty, and a pull toward the player's lane. */
@@ -548,11 +592,11 @@ class HighwayEngine(
         // The late game: after RAMP_SECONDS the run keeps getting harder, so a skilled player is never
         // safe forever. `late` climbs 0 -> 1 over LATE_RAMP_SECONDS.
         /** When the late game starts, and how long it takes to reach full strength. */
-        const val LATE_START_SECONDS = 80f
-        const val LATE_RAMP_SECONDS = 100f
+        const val LATE_START_SECONDS = 45f
+        const val LATE_RAMP_SECONDS = 200f
 
-        /** Extra top speed at late = 1. */
-        const val LATE_SPEED_BONUS = 15f
+        /** Fraction cut from the required gaps between obstacles at late = 1. */
+        const val LATE_GAP_CUT = 0.1f
 
         /** Fraction cut from the spawn interval at late = 1. */
         const val LATE_INTERVAL_CUT = 0.7f
@@ -568,7 +612,7 @@ class HighwayEngine(
         const val LATE_MOVING_WEIGHT = 0.55f
 
         /** Minimum seconds between two obstacles passing the player in the same lane, easy -> hard. */
-        const val SEPARATION_EASY = 0.37f
+        const val SEPARATION_EASY = 0.30f
         const val SEPARATION_HARD = 0.19f
 
         /** Extra seconds required between two obstacles in the SAME lane, easy -> hard. */
@@ -576,18 +620,18 @@ class HighwayEngine(
         const val SAME_LANE_EXTRA_HARD = 0.28f
 
         /** Extra seconds required per lane of distance between two obstacles, easy -> hard. */
-        const val LANE_GAP_EASY = 0.3f
+        const val LANE_GAP_EASY = 0.25f
         const val LANE_GAP_HARD = 0.17f
         const val MIN_CLOSING_SPEED = 1f
 
         /** Seconds two obstacles [laneDistance] lanes apart must pass the player apart at [difficulty]. */
-        fun requiredGapSeconds(laneDistance: Int, difficulty: Float): Float {
+        fun requiredGapSeconds(laneDistance: Int, difficulty: Float, late: Float = 0f): Float {
             val separation = SEPARATION_EASY + (SEPARATION_HARD - SEPARATION_EASY) * difficulty
             val perLane = LANE_GAP_EASY + (LANE_GAP_HARD - LANE_GAP_EASY) * difficulty
             // Two obstacles in the same lane need extra room too: otherwise that lane is always the
             // easiest slot and obstacles queue up in one lane while the rest of the road stays empty.
             val sameLane = if (laneDistance == 0) SAME_LANE_EXTRA_EASY + (SAME_LANE_EXTRA_HARD - SAME_LANE_EXTRA_EASY) * difficulty else 0f
-            return separation + perLane * laneDistance + sameLane
+            return (separation + perLane * laneDistance + sameLane) * (1f - LATE_GAP_CUT * late)
         }
     }
 }

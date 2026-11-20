@@ -422,19 +422,77 @@ class HighwayEngineTest {
     }
 
     @Test
-    fun theTopSpeedClimbsWithTheRun() {
+    fun theSpeedStaysTheSameForTheWholeRun() {
         repeat(100 * 20) { // 100 s, no obstacles
             engine.traffic.clear()
             engine.items.clear()
             keepFueled(0.05f)
             engine.tick(0.05f)
         }
-        assertTrue(engine.speed > HighwayEngine.EARLY_TOP_SPEED + 5f)
-        assertTrue(engine.speed <= HighwayEngine.MAX_SPEED + HighwayEngine.LATE_SPEED_BONUS)
+        assertEquals(HighwayEngine.CRUISE_SPEED, engine.speed, 0f)
     }
 
     @Test
-    fun theGameKeepsGettingHarderAfterTheRamp_speedFuelAndStandingObstacles() {
+    fun rides_theBicycleIsFastestAndTheJoggerSlowest() {
+        fun speedOf(ride: String) = HighwayEngine(random = Random(1)).also { it.start(ride) }.speed
+        assertTrue(speedOf("bicycle") > speedOf("inline") && speedOf("inline") > speedOf("jogging"))
+        assertEquals(HighwayEngine.CRUISE_SPEED, speedOf("kickboard"), 0f)
+    }
+
+    @Test
+    fun rides_theJoggerReachesTheNextLaneSoonerThanTheCyclist() {
+        fun timeToLane(ride: String): Float {
+            val e = HighwayEngine(random = Random(1))
+            e.start(ride)
+            e.moveLane(1)
+            val target = HW_LANE_CENTERS[e.laneIndex]
+            var t = 0f
+            while (abs(target - e.playerX) > 0.02f && t < 2f) {
+                e.traffic.clear(); e.items.clear(); e.tick(1f / 120f); t += 1f / 120f
+            }
+            return t
+        }
+        assertTrue(timeToLane("jogging") < timeToLane("kickboard"))
+        assertTrue(timeToLane("kickboard") < timeToLane("bicycle"))
+    }
+
+    @Test
+    fun rides_inlineDoublesTheNearMissBonus_butANextLanePassStillIsNoNearMiss() {
+        engine.start("inline")
+        addTraffic(lx = 0.3f, relativeZ = 1f)
+        tickUntilPassed(engine.traffic.last())
+        assertEquals((engine.z * HighwayEngine.SCORE_PER_UNIT).toInt() + 2 * HighwayEngine.NEAR_MISS_SCORE, engine.score)
+        engine.start("inline")
+        addTraffic(lx = HW_LANE_SPACING, relativeZ = 1f)
+        tickUntilPassed(engine.traffic.last())
+        assertEquals(0, engine.nearMissCount)
+    }
+
+    @Test
+    fun rides_staminaDrainsSlowerJoggingAndFasterOnInlineSkates() {
+        fun drained(ride: String): Float {
+            val e = HighwayEngine(random = Random(1))
+            e.start(ride)
+            repeat(60) { e.traffic.clear(); e.items.clear(); e.tick(1f / 60f) }
+            return HighwayEngine.MAX_FUEL - e.fuel
+        }
+        assertTrue(drained("jogging") < drained("bicycle") && drained("bicycle") < drained("inline"))
+    }
+
+    @Test
+    fun rides_theKickboardKeepsAShieldLongerAndRefillsLessFromABottle() {
+        engine.start("kickboard")
+        burnFuel(12f) // room for a full bottle
+        val before = engine.fuel
+        addItem(ItemType.SHIELD, engine.playerX, 0.1f)
+        addItem(ItemType.FUEL, engine.playerX, 0.1f)
+        engine.tick(0.01f)
+        assertEquals(HighwayEngine.SHIELD_DURATION_SECONDS * 1.6f, engine.shieldTimeLeft, 0.05f)
+        assertEquals(HighwayEngine.FUEL_REFILL_AMOUNT * 0.9f, engine.fuel - before, 0.1f)
+    }
+
+    @Test
+    fun theGameKeepsGettingHarderAfterTheRamp_atOneSteadySpeed() {
         // A ghost run (no obstacles in the way, kept fueled) to see what the clock alone does.
         var earlyTop = 0f
         var lateTop = 0f
@@ -446,9 +504,10 @@ class HighwayEngineTest {
             if (tick == 60 * 20) earlyTop = engine.speed
             lateTop = maxOf(lateTop, engine.speed)
         }
-        assertEquals("late is full 180 s in", 1f, engine.late, 1e-4f)
-        assertTrue("60 s in the speed is still under the old cap (" + earlyTop + ")", earlyTop <= HighwayEngine.MAX_SPEED)
-        assertTrue("late the top speed goes beyond it (" + lateTop + ")", lateTop > HighwayEngine.MAX_SPEED + HighwayEngine.LATE_SPEED_BONUS * 0.8f)
+        assertEquals("late is full 245 s in", 1f, engine.late, 1e-4f)
+        assertEquals("cruising at 60 s", HighwayEngine.CRUISE_SPEED, earlyTop, 0f)
+        assertEquals("and never faster", HighwayEngine.CRUISE_SPEED, lateTop, 0f)
+        assertTrue("late gaps are tighter", HighwayEngine.requiredGapSeconds(1, 1f, 1f) < HighwayEngine.requiredGapSeconds(1, 1f, 0f))
         assertTrue("late is 0 before the ramp ends", HighwayEngine().also { it.start(); repeat(100) { _ -> it.tick(0.05f) } }.late == 0f)
     }
 
@@ -490,11 +549,11 @@ class HighwayEngineTest {
     }
 
     @Test
-    fun startsRunningAndAcceleratesForward() {
+    fun startsRunningForwardAtTheCruisingSpeed() {
         assertEquals(GameStatus.RUNNING, engine.status)
         repeat(20) { engine.tick(0.05f) }
         assertTrue(engine.z > 0f)
-        assertTrue(engine.speed > HighwayEngine.START_SPEED)
+        assertEquals(HighwayEngine.CRUISE_SPEED, engine.speed, 0f)
     }
 
     @Test

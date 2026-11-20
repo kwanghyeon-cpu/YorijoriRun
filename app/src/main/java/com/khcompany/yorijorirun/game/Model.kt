@@ -36,6 +36,21 @@ data class CarOption(
     val roofColor: Color,
     /** Behind-the-car sprite (drawable name, no extension); empty falls back to a placeholder drawing. */
     val rearSpriteName: String = "",
+    /** What the character screen shows; the engine side is RideTraits.forRide(id) in HighwayEngine.kt. */
+    val stats: RideStats = RideStats(3, 3, 3, "", ""),
+)
+
+/**
+ * A ride's strengths as the character screen shows them: speed, agility (side-steps) and stamina on a
+ * 1..5 scale, plus one strength and one weakness line. Keep in step with RideTraits.forRide and the web
+ * CARS table in web/js/catalog.js.
+ */
+data class RideStats(
+    val speed: Int,
+    val agility: Int,
+    val stamina: Int,
+    val strength: String,
+    val weakness: String,
 )
 
 object GameCatalog {
@@ -91,6 +106,7 @@ object GameCatalog {
             bodyColor = Color(0xFFE63946),
             roofColor = Color(0xFF1D1D2C),
             rearSpriteName = "car_rear_1",
+            stats = RideStats(speed = 2, agility = 5, stamina = 4, strength = "좌우로 재빨라요", weakness = "가장 느려요"),
         ),
         CarOption(
             id = "bicycle",
@@ -99,6 +115,7 @@ object GameCatalog {
             bodyColor = Color(0xFFFFA23C),
             roofColor = Color(0xFF2B2B2B),
             rearSpriteName = "car_rear_2",
+            stats = RideStats(speed = 5, agility = 2, stamina = 3, strength = "가장 빨라 점수 쑥쑥", weakness = "좌우 이동이 무거워요"),
         ),
         CarOption(
             id = "inline",
@@ -107,6 +124,7 @@ object GameCatalog {
             bodyColor = Color(0xFF3D8BFF),
             roofColor = Color(0xFF1A2340),
             rearSpriteName = "car_rear_3",
+            stats = RideStats(speed = 3, agility = 3, stamina = 2, strength = "아슬아슬 보너스 2배", weakness = "체력이 빨리 줄어요"),
         ),
         CarOption(
             id = "kickboard",
@@ -115,6 +133,7 @@ object GameCatalog {
             bodyColor = Color(0xFF4CAF50),
             roofColor = Color(0xFF22331F),
             rearSpriteName = "car_rear_4",
+            stats = RideStats(speed = 3, agility = 3, stamina = 3, strength = "방어막·자석이 오래가요", weakness = "생수 회복이 적어요"),
         ),
     )
 

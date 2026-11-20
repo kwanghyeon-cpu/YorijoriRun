@@ -202,6 +202,13 @@ document.getElementById('btn-city-next').addEventListener('click', () => {
 });
 
 // ---------- CAR SELECT ----------
+/** One 1..5 stat as a label and five pips (the character screen; mirrors StatRow in CarSelectScreen.kt). */
+function statRow(label, value) {
+  let pips = '';
+  for (let i = 0; i < 5; i++) pips += `<i class="${i < value ? 'on' : ''}"></i>`;
+  return `<div class="stat"><span>${label}</span><span class="pips">${pips}</span></div>`;
+}
+
 function buildCarGrid() {
   const grid = document.getElementById('car-grid');
   grid.innerHTML = '';
@@ -212,6 +219,9 @@ function buildCarGrid() {
       <div class="thumb"><canvas width="300" height="231"></canvas></div>
       <p class="name">${car.name}</p>
       <p class="name-en">${car.nameEn}</p>
+      <div class="stats">${statRow('속도', car.stats.speed)}${statRow('몸놀림', car.stats.agility)}${statRow('체력', car.stats.stamina)}</div>
+      <p class="trait plus">+ ${car.stats.strength}</p>
+      <p class="trait minus">− ${car.stats.weakness}</p>
     `;
     card.addEventListener('click', () => {
       state.selectedCarId = car.id;
@@ -255,7 +265,7 @@ function startGame() {
     audio.play(event);
     vibrateFor(event);
   });
-  engine.start();
+  engine.start(state.selectedCarId);
   lastNearMissCount = 0;
   lateToastShown = false;
   audio.startBgm();
@@ -312,7 +322,7 @@ function updateHud() {
   lastNearMissCount = engine.nearMissCount;
   if (!lateToastShown && engine.late > 0) {
     lateToastShown = true;
-    showToast('LEVEL UP!  더 빨라져요');
+    showToast('LEVEL UP!  더 촘촘해져요');
   }
   document.getElementById('btn-pause').classList.toggle('hidden', engine.status !== 'RUNNING' || engine.paused);
   document.getElementById('pause-overlay').classList.toggle('hidden', !(engine.status === 'RUNNING' && engine.paused));
@@ -414,7 +424,7 @@ document.getElementById('btn-retry').addEventListener('click', () => {
 });
 
 function restartRun() {
-  engine.start();
+  engine.start(state.selectedCarId);
   lastNearMissCount = 0;
   lateToastShown = false;
   lastFrameTime = performance.now();

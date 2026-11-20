@@ -79,9 +79,9 @@ function plan(eng, here, margin) {
   return here + choice[forced][here];
 }
 
-function run(seed, reaction, cap) {
+function run(seed, reaction, cap, ride) {
   const eng = new HighwayEngine(() => {}, mulberry32(seed));
-  eng.start();
+  eng.start(ride);
   let now = 0, nextLook = 0, nextTap = 0, target = eng.laneIndex;
   const pending = [];
   while (eng.status === 'RUNNING' && now < cap) {
@@ -94,11 +94,16 @@ function run(seed, reaction, cap) {
 
 const label = process.argv[3] || 'engine';
 const runs = Number(process.env.RUNS || 30), cap = Number(process.env.CAP || 600);
-for (const reaction of (process.env.REACTIONS || '0.1,0.2,0.35,0.5').split(',').map(Number)) {
-  const res = [];
-  for (let s = 1; s <= runs; s++) res.push(run(s, reaction, cap));
-  const t = res.map(r => r.now).sort((a, b) => a - b);
-  const alive = res.filter(r => r.status === 'RUNNING').length;
-  const fuel = res.filter(r => r.reason === 'FUEL_EMPTY').length;
-  console.log(`${label} reaction=${reaction}: p10=${t[runs * 0.1 | 0].toFixed(0)}s p50=${t[runs >> 1].toFixed(0)}s p90=${t[runs * 0.9 | 0].toFixed(0)}s  survived-to-cap=${alive}/${runs} fuelDeaths=${fuel}`);
+// RIDE=<id> uses that ride's traits (jogging, bicycle, inline, kickboard); RIDES=all runs all four.
+const rides = process.env.RIDES === 'all' ? ['jogging', 'bicycle', 'inline', 'kickboard'] : [process.env.RIDE || null];
+for (const ride of rides) {
+  for (const reaction of (process.env.REACTIONS || '0.1,0.2,0.35,0.5').split(',').map(Number)) {
+    const res = [];
+    for (let s = 1; s <= runs; s++) res.push(run(s, reaction, cap, ride));
+    const t = res.map(r => r.now).sort((a, b) => a - b);
+    const sc = res.map(r => r.score).sort((a, b) => a - b);
+    const alive = res.filter(r => r.status === 'RUNNING').length;
+    const fuel = res.filter(r => r.reason === 'FUEL_EMPTY').length;
+    console.log(`${label}${ride ? ' ' + ride : ''} reaction=${reaction}: p10=${t[runs * 0.1 | 0].toFixed(0)}s p50=${t[runs >> 1].toFixed(0)}s p90=${t[runs * 0.9 | 0].toFixed(0)}s score-p50=${sc[runs >> 1]}  survived-to-cap=${alive}/${runs} fuelDeaths=${fuel}`);
+  }
 }

@@ -128,6 +128,15 @@ html, body {
 .pick-card .thumb canvas { width: 100%; height: 100%; display: block; }
 .pick-card .name { margin: 6px 0 0; font-size: 14px; }
 .pick-card .name-en { margin: 0; font-size: 10px; opacity: 0.6; }
+.pick-card .stats { margin-top: 6px; display: grid; gap: 3px; }
+.pick-card .stat { display: flex; align-items: center; font-size: 10px; }
+.pick-card .stat > span:first-child { width: 40px; opacity: 0.75; }
+.pick-card .pips { display: flex; gap: 3px; }
+.pick-card .pips i { width: 12px; height: 6px; border-radius: 2px; background: rgba(244,239,255,0.15); }
+.pick-card .pips i.on { background: var(--primary); }
+.pick-card .trait { margin: 0; font-size: 11px; }
+.pick-card .trait.plus { margin-top: 6px; color: #7BD88F; }
+.pick-card .trait.minus { color: #FF9F68; }
 
 /* ---------- GAME ---------- */
 #screen-game { background: #000; }

@@ -161,12 +161,15 @@ const TRAFFIC_KINDS = {
 };
 
 const HW = {
-  START_SPEED: 20,
-  /** Top speed at the start of a run; it climbs to MAX_SPEED over RAMP_SECONDS. */
-  EARLY_TOP_SPEED: 27,
+  /**
+   * The run moves at one steady speed from start to finish (CRUISE_SPEED times the ride's speedScale);
+   * difficulty comes from denser, tighter obstacles instead. MAX_SPEED is only a yardstick for the
+   * animation cadence and the bend push.
+   */
+  CRUISE_SPEED: 28,
   MAX_SPEED: 33,
+  /** Gaps between obstacles tighten from easy to hard over RAMP_SECONDS. */
   RAMP_SECONDS: 120,
-  ACCELERATION: 1.4,
   /** The lane-chasing spring: ~22 rad/s, damping ratio ~0.7 — a lane takes ~0.15 s, a few percent overshoot. */
   LANE_SPRING: 480,
   LANE_DAMPING: 31,
@@ -209,9 +212,9 @@ const HW = {
   MAGNET_RANGE: 9,
   MAGNET_PULL_RATE: 10,
   // Spawn events: seconds between attempts, easy -> hard, over DENSITY_RAMP_SECONDS.
-  DENSITY_RAMP_SECONDS: 40,
+  DENSITY_RAMP_SECONDS: 25,
   SPAWN_EASY_INTERVAL: 0.72,
-  SPAWN_HARD_INTERVAL: 0.30,
+  SPAWN_HARD_INTERVAL: 0.24,
   SPAWN_RETRY_INTERVAL: 0.08,
 
   /** Obstacle lane choice: noise (seconds) on how long a lane has been empty, and a pull toward the player's lane. */
@@ -221,10 +224,10 @@ const HW = {
   // The late game: after RAMP_SECONDS the run keeps getting harder, so a skilled player is never
   // safe forever. `late` climbs 0 -> 1 over LATE_RAMP_SECONDS (and a bit past it).
   /** When the late game starts, and how long it takes to reach full strength. */
-  LATE_START_SECONDS: 80,
-  LATE_RAMP_SECONDS: 100,
-  /** Extra top speed at late = 1. */
-  LATE_SPEED_BONUS: 15,
+  LATE_START_SECONDS: 45,
+  LATE_RAMP_SECONDS: 200,
+  /** Fraction cut from the required gaps between obstacles at late = 1. */
+  LATE_GAP_CUT: 0.1,
   /** Fraction cut from the spawn interval at late = 1. */
   LATE_INTERVAL_CUT: 0.7,
   /** Extra fuel drain per second at late = 1. */
@@ -235,10 +238,10 @@ const HW = {
   LATE_STATIC_WEIGHT: 4.5,
   LATE_MOVING_WEIGHT: 0.55,
   // Minimum seconds between two obstacles passing the player in the same lane, easy -> hard.
-  SEPARATION_EASY: 0.37,
+  SEPARATION_EASY: 0.30,
   SEPARATION_HARD: 0.19,
   // Extra seconds required per lane of distance between two obstacles, easy -> hard.
-  LANE_GAP_EASY: 0.3,
+  LANE_GAP_EASY: 0.25,
   /** Extra seconds required between two obstacles in the SAME lane, easy -> hard. */
   SAME_LANE_EXTRA_EASY: 0.45,
   SAME_LANE_EXTRA_HARD: 0.28,
@@ -246,14 +249,36 @@ const HW = {
   MIN_CLOSING_SPEED: 1,
 };
 
+/**
+ * What sets each ride apart (the character screen's bars). Defaults are the plain values; each ride trades
+ * one strength for one weakness:
+ *   jogging   quick side-steps and slow stamina loss, but the slowest (score climbs slowest)
+ *   bicycle   the fastest (score climbs fastest), but heavy side-steps
+ *   inline    a wider near-miss window worth double, but stamina drains faster
+ *   kickboard shield and magnet last longer, but water bottles refill less
+ * laneQuickness scales the lane spring's frequency (spring x q^2, damping x q keeps the same overshoot).
+ */
+const RIDE_TRAITS_DEFAULT = {
+  speedScale: 1, laneQuickness: 1, drainScale: 1, nearMissMargin: 0.10, nearMissScoreScale: 1, powerupScale: 1, refillScale: 1,
+};
+const RIDE_TRAITS = {
+  jogging: { speedScale: 0.9, laneQuickness: 1.15, drainScale: 0.9 },
+  bicycle: { speedScale: 1.1, laneQuickness: 0.8 },
+  inline: { nearMissMargin: 0.115, nearMissScoreScale: 2, drainScale: 1.2 },
+  kickboard: { powerupScale: 1.6, refillScale: 0.9 },
+};
+function rideTraits(rideId) {
+  return Object.assign({}, RIDE_TRAITS_DEFAULT, RIDE_TRAITS[rideId] || {});
+}
+
 /** Seconds two obstacles laneDistance lanes apart must pass the player apart at the given difficulty. */
-function requiredGapSeconds(laneDistance, difficulty) {
+function requiredGapSeconds(laneDistance, difficulty, late = 0) {
   const separation = HW.SEPARATION_EASY + (HW.SEPARATION_HARD - HW.SEPARATION_EASY) * difficulty;
   const perLane = HW.LANE_GAP_EASY + (HW.LANE_GAP_HARD - HW.LANE_GAP_EASY) * difficulty;
   // Two obstacles in the same lane need extra room too: otherwise that lane is always the easiest slot and
   // obstacles queue up in one lane while the rest of the road stays empty.
   const sameLane = laneDistance === 0 ? HW.SAME_LANE_EXTRA_EASY + (HW.SAME_LANE_EXTRA_HARD - HW.SAME_LANE_EXTRA_EASY) * difficulty : 0;
-  return separation + perLane * laneDistance + sameLane;
+  return (separation + perLane * laneDistance + sameLane) * (1 - HW.LATE_GAP_CUT * late);
 }
 
 function laneIndexOf(lateral) {
@@ -278,6 +303,7 @@ class HighwayEngine {
     this.traffic = [];
     this.items = [];
     this.nextId = 0; // not reset by start(), so ids stay unique across restarts
+    this.traits = rideTraits(null);
     this._reset();
   }
 
@@ -293,7 +319,7 @@ class HighwayEngine {
     this.laneIndex = HW_LANE_CENTERS.length >> 1; // lane the player is heading for
     this.playerX = HW_LANE_CENTERS[this.laneIndex]; // lateral position in road half-widths (a spring chasing that lane)
     this.lateralVelocity = 0;
-    this.speed = HW.START_SPEED;
+    this.speed = HW.CRUISE_SPEED * this.traits.speedScale;
     this.score = 0;
     this.bonusScore = 0;
     this.fuel = HW.MAX_FUEL;
@@ -311,7 +337,9 @@ class HighwayEngine {
     this.pendingRoll = -1; // the spawn roll waiting for a fair spot (-1 = none)
   }
 
-  start() {
+  /** Starts a run with the given ride's traits (see RIDE_TRAITS); no id means plain values. */
+  start(rideId = null) {
+    this.traits = rideTraits(rideId);
     this._reset();
     this.status = 'RUNNING';
     this.paused = false;
@@ -335,22 +363,20 @@ class HighwayEngine {
     this.shieldTimeLeft = Math.max(0, this.shieldTimeLeft - dt);
     this.magnetTimeLeft = Math.max(0, this.magnetTimeLeft - dt);
 
-    // Difficulty (speed, how tight the gaps are) eases from 0 to 1 over RAMP_SECONDS; traffic density
-    // ramps up much faster, over DENSITY_RAMP_SECONDS, so the road fills early.
+    // Difficulty (how tight the gaps are) eases from 0 to 1 over RAMP_SECONDS; traffic density ramps up
+    // much faster, over DENSITY_RAMP_SECONDS, so the road fills early.
     const difficulty = Math.min(1, Math.max(0, this.elapsedSeconds / HW.RAMP_SECONDS));
     const density = Math.min(1, Math.max(0, this.elapsedSeconds / HW.DENSITY_RAMP_SECONDS));
-    // After the ramp the game keeps tightening: speed, traffic, static obstacles, gates and fuel use.
+    // After the ramp the game keeps tightening: gaps, traffic, static obstacles, gates and fuel use.
     const late = Math.min(1, Math.max(0, (this.elapsedSeconds - HW.LATE_START_SECONDS) / HW.LATE_RAMP_SECONDS));
     this.late = late;
 
-    // Speed: auto-accelerates toward a top speed that creeps up with difficulty.
-    const topSpeed = HW.EARLY_TOP_SPEED + (HW.MAX_SPEED - HW.EARLY_TOP_SPEED) * difficulty + HW.LATE_SPEED_BONUS * late;
-    this.speed = Math.min(topSpeed, this.speed + HW.ACCELERATION * dt);
+    // Speed stays the ride's cruising speed for the whole run.
     this.z += this.speed * dt;
     this.heading += curveAt(this.z) * this.speed * dt;
 
     // Fuel drains all the time; cans and near misses refill it.
-    this.fuel = Math.max(0, this.fuel - (HW.FUEL_DRAIN_PER_SECOND + HW.LATE_FUEL_DRAIN * late) * dt);
+    this.fuel = Math.max(0, this.fuel - (HW.FUEL_DRAIN_PER_SECOND + HW.LATE_FUEL_DRAIN * late) * this.traits.drainScale * dt);
     if (!this.fuelWarningPlayed && this.fuel <= HW.MAX_FUEL * 0.2) {
       this.fuelWarningPlayed = true;
       this.onSfx('FUEL_LOW_WARNING');
@@ -367,8 +393,10 @@ class HighwayEngine {
     const steps = Math.max(1, Math.ceil(dt / HW.LATERAL_STEP));
     const h = dt / steps;
     const push = curveAt(this.z + HW_PLAYER_DZ) * (this.speed / HW.MAX_SPEED) * HW.CENTRIFUGAL;
+    const q = this.traits.laneQuickness;
+    const spring = HW.LANE_SPRING * q * q, damping = HW.LANE_DAMPING * q;
     for (let i = 0; i < steps; i++) {
-      this.lateralVelocity += (HW.LANE_SPRING * (laneX - this.playerX) - HW.LANE_DAMPING * this.lateralVelocity) * h;
+      this.lateralVelocity += (spring * (laneX - this.playerX) - damping * this.lateralVelocity) * h;
       this.playerX += (this.lateralVelocity - push) * h;
     }
 
@@ -399,8 +427,8 @@ class HighwayEngine {
       }
       if (!car.passed && relative < -HW.COLLISION_DEPTH) {
         car.passed = true;
-        if (lateral < HW.PLAYER_HALF_WIDTH + HW.OBSTACLE_HALF_WIDTH + HW.NEAR_MISS_MARGIN) {
-          this.bonusScore += HW.NEAR_MISS_SCORE;
+        if (lateral < HW.PLAYER_HALF_WIDTH + HW.OBSTACLE_HALF_WIDTH + this.traits.nearMissMargin) {
+          this.bonusScore += Math.round(HW.NEAR_MISS_SCORE * this.traits.nearMissScoreScale);
           this.fuel = Math.min(HW.MAX_FUEL, this.fuel + HW.NEAR_MISS_FUEL);
           this.nearMissCount++;
           this.nearMissFlash = HW.NEAR_MISS_FLASH_SECONDS;
@@ -436,16 +464,16 @@ class HighwayEngine {
   _collect(item) {
     if (item.type === 'FUEL') {
       this.bonusScore += HW.ITEM_SCORE_BONUS;
-      this.fuel = Math.min(HW.MAX_FUEL, this.fuel + HW.FUEL_REFILL_AMOUNT);
+      this.fuel = Math.min(HW.MAX_FUEL, this.fuel + HW.FUEL_REFILL_AMOUNT * this.traits.refillScale);
       this.fuelCollected++;
       this.onSfx('COIN');
     } else if (item.type === 'SHIELD') {
       this.bonusScore += HW.POWERUP_SCORE_BONUS;
-      this.shieldTimeLeft = HW.SHIELD_DURATION_SECONDS;
+      this.shieldTimeLeft = HW.SHIELD_DURATION_SECONDS * this.traits.powerupScale;
       this.onSfx('POWERUP');
     } else {
       this.bonusScore += HW.POWERUP_SCORE_BONUS;
-      this.magnetTimeLeft = HW.MAGNET_DURATION_SECONDS;
+      this.magnetTimeLeft = HW.MAGNET_DURATION_SECONDS * this.traits.powerupScale;
       this.onSfx('POWERUP');
     }
   }
@@ -551,7 +579,7 @@ class HighwayEngine {
     for (const lane of order) {
       const fair = !this.traffic.some((other) =>
         !other.passed &&
-        Math.abs(this._secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(Math.abs(lane - laneIndexOf(other.lx)), difficulty));
+        Math.abs(this._secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(Math.abs(lane - laneIndexOf(other.lx)), difficulty, late));
       if (!fair) return false;
     }
     order.forEach((lane, i) => {
@@ -576,7 +604,7 @@ class HighwayEngine {
     for (const lane of this._obstacleLaneOrder()) {
       const fair = !this.traffic.some((other) =>
         !other.passed &&
-        Math.abs(this._secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(Math.abs(lane - laneIndexOf(other.lx)), difficulty));
+        Math.abs(this._secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(Math.abs(lane - laneIndexOf(other.lx)), difficulty, late));
       if (!fair) continue;
       this.laneLastSpawn[lane] = this.elapsedSeconds;
       this.traffic.push({ id: this.nextId++, lx: HW_LANE_CENTERS[lane], z: spawnZ, speed: carSpeed, kind, passed: false });

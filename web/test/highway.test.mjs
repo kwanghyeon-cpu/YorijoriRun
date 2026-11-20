@@ -62,7 +62,7 @@ test('the projection is its own inverse and puts the car where it belongs', () =
   for (let i = 0; i < s.count; i++) assert.ok(Math.abs(dzForT(tForDz(s.dz[i])) - s.dz[i]) < 1e-2);
 });
 
-test('the game keeps getting harder after the ramp: speed, fuel and standing obstacles', () => {
+test('the game keeps getting harder after the ramp at one steady speed: tighter gaps, fuel and standing obstacles', () => {
   const eng = new HighwayEngine(() => {}, mulberry32(3));
   eng.start();
   let earlyTop = 0, lateTop = 0;
@@ -74,9 +74,10 @@ test('the game keeps getting harder after the ramp: speed, fuel and standing obs
     if (tick === 60 * 20) earlyTop = eng.speed;
     lateTop = Math.max(lateTop, eng.speed);
   }
-  assert.ok(Math.abs(eng.late - 1) < 1e-4, 'late is full 180 s in');
-  assert.ok(earlyTop <= HW.MAX_SPEED, 'still under the old cap at 60 s: ' + earlyTop);
-  assert.ok(lateTop > HW.MAX_SPEED + HW.LATE_SPEED_BONUS * 0.8, 'late the top speed goes beyond it: ' + lateTop);
+  assert.ok(Math.abs(eng.late - 1) < 1e-4, 'late is full 245 s in');
+  assert.equal(earlyTop, HW.CRUISE_SPEED, 'cruising at 60 s');
+  assert.equal(lateTop, HW.CRUISE_SPEED, 'and never faster');
+  assert.ok(requiredGapSeconds(1, 1, 1) < requiredGapSeconds(1, 1, 0), 'late gaps are tighter');
 });
 
 test('late in the run: more standing obstacles, and gates that always leave a lane open', () => {
@@ -219,11 +220,11 @@ function tickUntilPassed(car) {
   while (!car.passed && engine.status === 'RUNNING' && guard++ < 400) engine.tick(0.016);
 }
 
-test('starts running and accelerates forward', () => {
+test('starts running forward at the cruising speed', () => {
   assert.equal(engine.status, 'RUNNING');
   for (let i = 0; i < 20; i++) engine.tick(0.05);
   assert.ok(engine.z > 0);
-  assert.ok(engine.speed > HW.START_SPEED);
+  assert.equal(engine.speed, HW.CRUISE_SPEED);
 });
 
 test('colliding with traffic in your lane ends the run', () => {
@@ -372,15 +373,63 @@ test('five lanes, and every car fits its lane', () => {
   assert.ok(HW.PLAYER_DRAW_MAX_WIDTH < HW_LANE_SPACING, 'a drawn ride fits inside a lane');
 });
 
-test('the top speed climbs with the run', () => {
+test('the speed stays the same for the whole run', () => {
   for (let i = 0; i < 100 * 20; i++) { // 100 s, no obstacles
     engine.traffic.length = 0;
     engine.items.length = 0;
     engine.fuel = HW.MAX_FUEL;
     engine.tick(0.05);
   }
-  assert.ok(engine.speed > HW.EARLY_TOP_SPEED + 5);
-  assert.ok(engine.speed <= HW.MAX_SPEED + HW.LATE_SPEED_BONUS);
+  assert.equal(engine.speed, HW.CRUISE_SPEED);
+});
+
+test('rides: the bicycle is fastest and the jogger slowest', () => {
+  const speedOf = (ride) => { const e = new HighwayEngine(() => {}, mulberry32(1)); e.start(ride); return e.speed; };
+  assert.ok(speedOf('bicycle') > speedOf('inline') && speedOf('inline') > speedOf('jogging'));
+  assert.equal(speedOf('kickboard'), HW.CRUISE_SPEED);
+});
+
+test('rides: the jogger reaches the next lane sooner than the cyclist', () => {
+  const timeToLane = (ride) => {
+    const e = new HighwayEngine(() => {}, mulberry32(1));
+    e.start(ride);
+    e.moveLane(1);
+    const target = HW_LANE_CENTERS[e.laneIndex];
+    let t = 0;
+    while (Math.abs(target - e.playerX) > 0.02 && t < 2) { e.traffic.length = 0; e.items.length = 0; e.tick(1 / 120); t += 1 / 120; }
+    return t;
+  };
+  assert.ok(timeToLane('jogging') < timeToLane('kickboard'));
+  assert.ok(timeToLane('kickboard') < timeToLane('bicycle'));
+});
+
+test('rides: inline skates double the near-miss bonus, but a pass in the next lane still is no near miss', () => {
+  engine.start('inline');
+  tickUntilPassed(addTraffic(0.3, 1));
+  assert.equal(engine.score, Math.floor(engine.z * HW.SCORE_PER_UNIT) + 2 * HW.NEAR_MISS_SCORE);
+  engine.start('inline');
+  tickUntilPassed(addTraffic(HW_LANE_SPACING, 1));
+  assert.equal(engine.nearMissCount, 0);
+});
+
+test('rides: stamina drains slower jogging, faster on inline skates', () => {
+  const drained = (ride) => {
+    const e = new HighwayEngine(() => {}, mulberry32(1));
+    e.start(ride);
+    for (let i = 0; i < 60; i++) { e.traffic.length = 0; e.items.length = 0; e.tick(1 / 60); }
+    return HW.MAX_FUEL - e.fuel;
+  };
+  assert.ok(drained('jogging') < drained('bicycle') && drained('bicycle') < drained('inline'));
+});
+
+test('rides: the kickboard keeps a shield longer and refills less from a bottle', () => {
+  engine.start('kickboard');
+  engine.fuel = 50;
+  addItem('SHIELD', engine.playerX, 0.1);
+  addItem('FUEL', engine.playerX, 0.1);
+  engine.tick(0.01);
+  assert.ok(Math.abs(engine.shieldTimeLeft - HW.SHIELD_DURATION_SECONDS * 1.6) < 0.05);
+  assert.ok(engine.fuel < 50 + HW.FUEL_REFILL_AMOUNT * 0.95);
 });
 
 test('fuel drains, and an empty tank ends the run', () => {

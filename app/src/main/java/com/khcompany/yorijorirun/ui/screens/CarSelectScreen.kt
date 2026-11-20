@@ -8,11 +8,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -21,10 +24,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,7 +55,7 @@ fun CarSelectScreen(
             .padding(16.dp),
     ) {
         Text(
-            text = "탈것 선택",
+            text = "캐릭터 선택",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 10.dp),
@@ -131,5 +136,51 @@ private fun CarCard(car: CarOption, selected: Boolean, onClick: () -> Unit) {
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 11.sp),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
+        // Strengths and weaknesses (the engine side is RideTraits.forRide).
+        Column(modifier = Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            StatRow("속도", car.stats.speed)
+            StatRow("몸놀림", car.stats.agility)
+            StatRow("체력", car.stats.stamina)
+        }
+        Text(
+            text = "+ " + car.stats.strength,
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 11.sp),
+            color = StrengthColor,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Text(
+            text = "− " + car.stats.weakness,
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 11.sp),
+            color = WeaknessColor,
+        )
+    }
+}
+
+private val StrengthColor = Color(0xFF7BD88F)
+private val WeaknessColor = Color(0xFFFF9F68)
+
+/** One 1..5 stat as a label and five pips. */
+@Composable
+private fun StatRow(label: String, value: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 10.sp),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            modifier = Modifier.width(40.dp),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(5) { i ->
+                Box(
+                    modifier = Modifier
+                        .size(width = 12.dp, height = 6.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            if (i < value) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                        ),
+                )
+            }
+        }
     }
 }
