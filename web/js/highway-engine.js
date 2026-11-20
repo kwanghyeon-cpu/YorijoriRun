@@ -146,7 +146,7 @@ function skylineScroll(strips, screenWidth) {
  * barriers stand still on the road (speed 0, so they rush at you at your own speed). halfWidth is
  * the collision half-width in road half-widths; drawHalfWidth only sizes the sprite, so the art can
  * change without changing the game. heightFactor (height / width) matches the sprite.
- * Path Dash art: SEDAN = cyclist, SUV = dog walker, BUS = running crew, TRUCK = delivery scooter,
+ * 요리조리 런 art: SEDAN = cyclist, SUV = dog walker, BUS = running crew, TRUCK = delivery scooter,
  * CONE = traffic cone, BARRIER = pothole (the names stay from Lane Dash).
  */
 const TRAFFIC_KINDS = {

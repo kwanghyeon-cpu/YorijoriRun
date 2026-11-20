@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PathDash"
+rootProject.name = "YorijoriRun"
 include(":app")

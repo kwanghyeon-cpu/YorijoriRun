@@ -15,7 +15,7 @@ service cloud.firestore {
 
     // Global leaderboard (also used by the web version). The app only ever (a) reads the top N scores
     // and (b) adds a new {name, score} entry.
-    match /scores_pathdash/{scoreId} {
+    match /scores_yorijorirun/{scoreId} {
       allow get: if true;
       // Top-N queries only (the app asks for 10), so the whole collection can't be dumped.
       allow list: if request.query.limit <= 50;

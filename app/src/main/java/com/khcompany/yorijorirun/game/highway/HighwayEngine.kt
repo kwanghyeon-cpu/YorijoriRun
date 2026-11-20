@@ -1,0 +1,585 @@
+package com.khcompany.yorijorirun.game.highway
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.khcompany.yorijorirun.game.GameOverReason
+import com.khcompany.yorijorirun.game.GameStatus
+import com.khcompany.yorijorirun.game.ItemType
+import com.khcompany.yorijorirun.game.SfxEvent
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.random.Random
+
+/**
+ * Kinds of obstacle ahead. Vehicles move with traffic (wider/taller ones slower); cones and
+ * barriers stand still on the road (speed 0, so they rush at you at your own speed).
+ * [halfWidth] is the collision half-width in road half-widths; [drawHalfWidth] only sizes the
+ * sprite, so the art can change without changing the game. [heightFactor] (height / width) matches
+ * the sprite named [spriteName]. A lane is [HW_LANE_SPACING] wide, so these stay well inside one.
+ * 요리조리 런 art: SEDAN = cyclist, SUV = dog walker, BUS = running crew, TRUCK = delivery scooter,
+ * CONE = traffic cone, BARRIER = pothole (the names stay from Lane Dash).
+ */
+enum class TrafficKind(
+    val halfWidth: Float,
+    val drawHalfWidth: Float,
+    val heightFactor: Float,
+    val minSpeed: Float,
+    val maxSpeed: Float,
+    val spriteName: String,
+) {
+    SEDAN(0.14f, 0.12f, 2.46f, 9f, 13f, "traffic_rear_sedan"),
+    SUV(0.15f, 0.22f, 1.24f, 8.5f, 12.5f, "traffic_rear_suv"),
+    BUS(0.19f, 0.24f, 1.02f, 7f, 10.5f, "traffic_rear_bus"),
+    TRUCK(0.18f, 0.18f, 1.62f, 6f, 9.5f, "traffic_rear_truck"),
+    CONE(0.09f, 0.09f, 1.2f, 0f, 0f, "hw_cone"),
+    BARRIER(0.17f, 0.17f, 0.43f, 0f, 0f, "hw_barrier"),
+}
+
+class TrafficCar(
+    val id: Long,
+    /** Lateral position in road half-widths. */
+    val lx: Float,
+    /** Position along the road, in world units. */
+    var z: Float,
+    val speed: Float,
+    val kind: TrafficKind,
+) {
+    /** Set once the car is behind the player (near-miss bonus is judged at that moment). */
+    var passed = false
+}
+
+/** A pickup lying on the road (fuel can, shield, magnet). Cans fly toward you under the magnet. */
+class HighwayItem(
+    val id: Long,
+    /** Lateral position in road half-widths; changes only while the magnet pulls a fuel can. */
+    var lx: Float,
+    /** Position along the road, in world units. */
+    val z: Float,
+    val type: ItemType,
+)
+
+/**
+ * Simulation for the behind-the-car mode. Pure and resolution independent:
+ * the UI only reads state and calls [moveLane] (one lane per press).
+ */
+class HighwayEngine(
+    private val onSfx: (SfxEvent) -> Unit = {},
+    private val random: Random = Random.Default,
+) {
+    var status by mutableStateOf(GameStatus.READY)
+        private set
+    var paused by mutableStateOf(false)
+        private set
+    var gameOverReason by mutableStateOf<GameOverReason?>(null)
+        private set
+
+    /** True once a rewarded-ad continue has been used this run — only one per run. */
+    var usedContinue by mutableStateOf(false)
+        private set
+
+    /** Camera position along the road (world units). */
+    var z by mutableFloatStateOf(0f)
+        private set
+
+    /** Lane the player is heading for (index into [HW_LANE_CENTERS]). */
+    var laneIndex by mutableIntStateOf(HW_LANE_CENTERS.size / 2)
+        private set
+
+    /**
+     * Player's lateral position in road half-widths. It is a spring-damper chasing the target
+     * lane's center, so a lane change has weight (overshoot, lean) and road bends still push it.
+     */
+    var playerX by mutableFloatStateOf(0f)
+        private set
+    var speed by mutableFloatStateOf(START_SPEED)
+        private set
+    var score by mutableIntStateOf(0)
+        private set
+    var elapsedSeconds by mutableFloatStateOf(0f)
+        private set
+
+    /** Accumulated road heading; the UI scrolls the skyline backdrop by it. */
+    var heading by mutableFloatStateOf(0f)
+        private set
+
+    var fuel by mutableFloatStateOf(MAX_FUEL)
+        private set
+    var shieldTimeLeft by mutableFloatStateOf(0f)
+        private set
+    var magnetTimeLeft by mutableFloatStateOf(0f)
+        private set
+
+    /** 0 until [LATE_START_SECONDS], then climbs to 1 over [LATE_RAMP_SECONDS]: how deep into the late game the run is. */
+    var late by mutableFloatStateOf(0f)
+        private set
+
+    /** Obstacles passed at close range this run (each awards a score + fuel bonus). */
+    var nearMissCount by mutableIntStateOf(0)
+        private set
+
+    /** Fuel cans picked up this run. */
+    var fuelCollected by mutableIntStateOf(0)
+        private set
+
+    val traffic = mutableStateListOf<TrafficCar>()
+    val items = mutableStateListOf<HighwayItem>()
+
+    /** Seconds left of the "NEAR MISS" flash after the latest close pass (0 when idle). */
+    var nearMissFlash by mutableFloatStateOf(0f)
+        private set
+
+    /** -1..1: how far the car still has to travel to its lane; the UI leans the sprite by it. */
+    val steerLean: Float get() = ((HW_LANE_CENTERS[laneIndex] - playerX) / HW_LANE_SPACING).coerceIn(-1f, 1f)
+
+    private var lateralVelocity = 0f
+    private var spawnCooldown = 1f
+    private var nextId = 0L
+    private var bonusScore = 0
+    private var fuelWarningPlayed = false
+
+    /** The spawn roll waiting for a fair spot (-1 = none). */
+    /** When (run seconds) each lane last got an obstacle, so new ones spread across the road. */
+    private val laneLastSpawn = FloatArray(HW_LANE_CENTERS.size) { -10f }
+
+    private var pendingRoll = -1f
+
+    fun start() {
+        traffic.clear()
+        items.clear()
+        status = GameStatus.RUNNING
+        paused = false
+        gameOverReason = null
+        usedContinue = false
+        z = 0f
+        laneIndex = HW_LANE_CENTERS.size / 2
+        playerX = HW_LANE_CENTERS[laneIndex]
+        lateralVelocity = 0f
+        speed = START_SPEED
+        score = 0
+        bonusScore = 0
+        fuel = MAX_FUEL
+        shieldTimeLeft = 0f
+        magnetTimeLeft = 0f
+        nearMissCount = 0
+        fuelCollected = 0
+        fuelWarningPlayed = false
+        nearMissFlash = 0f
+        elapsedSeconds = 0f
+        late = 0f
+        laneLastSpawn.fill(-10f)
+        heading = 0f
+        spawnCooldown = 1f
+        pendingRoll = -1f
+    }
+
+    /**
+     * Resumes a GAME_OVER run after the player watches a rewarded ad: refills the tank, clears the
+     * road just ahead of (and under) the car and grants a short shield, so the crash that ended the
+     * run can't re-fire on the next tick. Score and speed carry over. Once per run.
+     */
+    fun continueAfterAd() {
+        if (status != GameStatus.GAME_OVER || usedContinue) return
+        usedContinue = true
+        fuel = MAX_FUEL
+        fuelWarningPlayed = false
+        shieldTimeLeft = maxOf(shieldTimeLeft, CONTINUE_SHIELD_SECONDS)
+        val playerZ = z + HW_PLAYER_DZ
+        traffic.removeAll { it.z - playerZ in -CONTINUE_CLEAR_BEHIND..CONTINUE_CLEAR_AHEAD }
+        gameOverReason = null
+        paused = false
+        status = GameStatus.RUNNING
+    }
+
+    fun pause() {
+        if (status == GameStatus.RUNNING) paused = true
+    }
+
+    fun resume() {
+        paused = false
+    }
+
+    /** Heads one lane left (-1) or right (+1); the car glides there in a fraction of a second. */
+    fun moveLane(delta: Int) {
+        if (status != GameStatus.RUNNING || paused) return
+        laneIndex = (laneIndex + delta).coerceIn(0, HW_LANE_CENTERS.size - 1)
+    }
+
+    fun tick(dtSeconds: Float) {
+        if (status != GameStatus.RUNNING || paused) return
+        val dt = dtSeconds.coerceAtMost(0.05f)
+        elapsedSeconds += dt
+        if (nearMissFlash > 0f) nearMissFlash = maxOf(0f, nearMissFlash - dt)
+        shieldTimeLeft = (shieldTimeLeft - dt).coerceAtLeast(0f)
+        magnetTimeLeft = (magnetTimeLeft - dt).coerceAtLeast(0f)
+
+        // Difficulty (speed, how tight the gaps are) eases from 0 to 1 over RAMP_SECONDS; traffic
+        // density ramps up much faster, over DENSITY_RAMP_SECONDS, so the road fills early.
+        val difficulty = (elapsedSeconds / RAMP_SECONDS).coerceIn(0f, 1f)
+        val density = (elapsedSeconds / DENSITY_RAMP_SECONDS).coerceIn(0f, 1f)
+        // After the ramp the game keeps tightening: speed, traffic, static obstacles, gates and fuel use.
+        late = ((elapsedSeconds - LATE_START_SECONDS) / LATE_RAMP_SECONDS).coerceIn(0f, 1f)
+
+        // Speed: auto-accelerates toward a top speed that creeps up with difficulty.
+        val topSpeed = EARLY_TOP_SPEED + (MAX_SPEED - EARLY_TOP_SPEED) * difficulty + LATE_SPEED_BONUS * late
+        speed = minOf(topSpeed, speed + ACCELERATION * dt)
+        z += speed * dt
+        heading += curveAt(z) * speed * dt
+
+        // Fuel drains all the time; cans and near misses refill it.
+        fuel = (fuel - (FUEL_DRAIN_PER_SECOND + LATE_FUEL_DRAIN * late) * dt).coerceAtLeast(0f)
+        if (!fuelWarningPlayed && fuel <= MAX_FUEL * 0.2f) {
+            fuelWarningPlayed = true
+            onSfx(SfxEvent.FUEL_LOW_WARNING)
+        }
+        if (fuel <= 0f) {
+            onSfx(SfxEvent.FUEL_EMPTY)
+            endGame(GameOverReason.FUEL_EMPTY)
+            return
+        }
+
+        // Chase the target lane with a damped spring (small sub-steps keep it stable), while bends
+        // in the road push the car outward.
+        val laneX = HW_LANE_CENTERS[laneIndex]
+        val steps = ceil(dt / LATERAL_STEP).toInt().coerceAtLeast(1)
+        val h = dt / steps
+        val push = curveAt(z + HW_PLAYER_DZ) * (speed / MAX_SPEED) * CENTRIFUGAL
+        repeat(steps) {
+            lateralVelocity += (LANE_SPRING * (laneX - playerX) - LANE_DAMPING * lateralVelocity) * h
+            playerX += (lateralVelocity - push) * h
+        }
+
+        spawnCooldown -= dt
+        if (spawnCooldown <= 0f) {
+            spawnCooldown = if (spawnSomething(difficulty, late)) {
+                (SPAWN_EASY_INTERVAL + (SPAWN_HARD_INTERVAL - SPAWN_EASY_INTERVAL) * density) *
+                    (1f - LATE_INTERVAL_CUT * late) * (0.7f + 0.6f * random.nextFloat())
+            } else {
+                SPAWN_RETRY_INTERVAL
+            }
+        }
+
+        val playerZ = z + HW_PLAYER_DZ
+        val iterator = traffic.listIterator()
+        while (iterator.hasNext()) {
+            val car = iterator.next()
+            car.z += car.speed * dt
+            val relative = car.z - playerZ
+            val lateral = abs(car.lx - playerX)
+            if (abs(relative) < COLLISION_DEPTH && lateral < PLAYER_HALF_WIDTH + car.kind.halfWidth) {
+                if (shieldTimeLeft > 0f) {
+                    // The shield smashes through: the obstacle is gone, the run goes on.
+                    onSfx(SfxEvent.SHIELD_HIT)
+                    iterator.remove()
+                    continue
+                }
+                onSfx(SfxEvent.CRASH)
+                endGame(GameOverReason.COLLISION)
+                return
+            }
+            if (!car.passed && relative < -COLLISION_DEPTH) {
+                car.passed = true
+                if (lateral < PLAYER_HALF_WIDTH + car.kind.halfWidth + NEAR_MISS_MARGIN) {
+                    bonusScore += NEAR_MISS_SCORE
+                    fuel = (fuel + NEAR_MISS_FUEL).coerceAtMost(MAX_FUEL)
+                    nearMissCount++
+                    nearMissFlash = NEAR_MISS_FLASH_SECONDS
+                    onSfx(SfxEvent.NEAR_MISS)
+                }
+            }
+            if (relative < -REMOVE_BEHIND) iterator.remove()
+        }
+
+        val itemIterator = items.listIterator()
+        while (itemIterator.hasNext()) {
+            val item = itemIterator.next()
+            val relative = item.z - playerZ
+            // The magnet draws fuel cans from any lane toward the car as they come within reach.
+            if (magnetTimeLeft > 0f && item.type == ItemType.FUEL && relative > -COLLISION_DEPTH && relative < MAGNET_RANGE) {
+                item.lx += (playerX - item.lx) * minOf(1f, dt * MAGNET_PULL_RATE)
+            }
+            if (abs(relative) < COLLISION_DEPTH && abs(item.lx - playerX) < PLAYER_HALF_WIDTH + ITEM_HALF_WIDTH) {
+                collect(item)
+                itemIterator.remove()
+                continue
+            }
+            if (relative < -REMOVE_BEHIND) itemIterator.remove()
+        }
+        score = currentScore()
+    }
+
+    private fun endGame(reason: GameOverReason) {
+        status = GameStatus.GAME_OVER
+        gameOverReason = reason
+        score = currentScore()
+    }
+
+    private fun collect(item: HighwayItem) {
+        when (item.type) {
+            ItemType.FUEL -> {
+                bonusScore += ITEM_SCORE_BONUS
+                fuel = (fuel + FUEL_REFILL_AMOUNT).coerceAtMost(MAX_FUEL)
+                fuelCollected++
+                onSfx(SfxEvent.COIN)
+            }
+            ItemType.SHIELD -> {
+                bonusScore += POWERUP_SCORE_BONUS
+                shieldTimeLeft = SHIELD_DURATION_SECONDS
+                onSfx(SfxEvent.POWERUP)
+            }
+            ItemType.MAGNET -> {
+                bonusScore += POWERUP_SCORE_BONUS
+                magnetTimeLeft = MAGNET_DURATION_SECONDS
+                onSfx(SfxEvent.POWERUP)
+            }
+        }
+    }
+
+    private fun currentScore(): Int = (z * SCORE_PER_UNIT).toInt() + bonusScore
+
+    /** Seconds until something at [thingZ] moving at [thingSpeed] reaches the player (0 if it already has). */
+    private fun secondsUntilPassing(thingZ: Float, thingSpeed: Float): Float {
+        val gap = thingZ - (z + HW_PLAYER_DZ)
+        if (gap <= 0f) return 0f
+        return gap / (speed - thingSpeed).coerceAtLeast(MIN_CLOSING_SPEED)
+    }
+
+    private fun laneOf(lx: Float): Int = HW_LANE_CENTERS.indices.minBy { abs(HW_LANE_CENTERS[it] - lx) }
+
+    /**
+     * One spawn event: mostly obstacles, sometimes a fuel can, rarely a
+     * shield or magnet. Returns whether anything was added (a fair spot may not exist right now).
+     */
+    private fun spawnSomething(difficulty: Float, late: Float): Boolean {
+        // The roll sticks until it succeeds, so a crowded road doesn't keep re-rolling toward the
+        // pickups (which always fit) and skew the mix.
+        if (pendingRoll < 0f) pendingRoll = random.nextFloat()
+        val roll = pendingRoll
+        val added = when {
+            roll < POWERUP_SPAWN_CHANCE -> spawnItem(if (random.nextBoolean()) ItemType.SHIELD else ItemType.MAGNET)
+            roll < POWERUP_SPAWN_CHANCE + ITEM_SPAWN_CHANCE -> spawnItem(ItemType.FUEL)
+            random.nextFloat() < GATE_CHANCE * late -> spawnGate(difficulty, late)
+            else -> spawnTraffic(difficulty, late)
+        }
+        if (added) pendingRoll = -1f
+        return added
+    }
+
+    /**
+     * Lanes in the order a new obstacle should try them: the ones that have gone longest without one
+     * first (with some noise), so obstacles spread across the road instead of queuing up in one lane,
+     * and lanes near the player slightly first so the player has to keep moving.
+     */
+    private fun obstacleLaneOrder(): List<Int> =
+        HW_LANE_CENTERS.indices.map { lane ->
+            lane to laneLastSpawn[lane] + random.nextFloat() * LANE_SPREAD_NOISE - abs(lane - laneIndex) * LANE_NEAR_PLAYER_BIAS
+        }.sortedBy { it.second }.map { it.first }
+
+    /** A pickup goes in a lane where no obstacle will pass at nearly the same moment. */
+    private fun spawnItem(type: ItemType): Boolean {
+        val spawnZ = z + HW_DRAW_DISTANCE - 1f
+        val passIn = secondsUntilPassing(spawnZ, 0f)
+        for (lane in HW_LANE_CENTERS.indices.shuffled(random)) {
+            val clear = traffic.none { other ->
+                !other.passed && laneOf(other.lx) == lane &&
+                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < ITEM_CLEARANCE_SECONDS
+            } && items.none { other -> laneOf(other.lx) == lane && abs(secondsUntilPassing(other.z, 0f) - passIn) < ITEM_CLEARANCE_SECONDS }
+            if (!clear) continue
+            items.add(HighwayItem(nextId++, HW_LANE_CENTERS[lane], spawnZ, type))
+            return true
+        }
+        return false
+    }
+
+    /** The kind of the next obstacle: sedans and SUVs early; more cones and barriers (which stand still) later. */
+    private fun pickKind(late: Float): TrafficKind {
+        val moving = 1f - (1f - LATE_MOVING_WEIGHT) * late
+        val still = 1f + (LATE_STATIC_WEIGHT - 1f) * late
+        val weights = listOf(
+            TrafficKind.SEDAN to 6f * moving, TrafficKind.SUV to 5f * moving, TrafficKind.BUS to 2f * moving,
+            TrafficKind.TRUCK to 2f * moving, TrafficKind.CONE to 3f * still, TrafficKind.BARRIER to 2f * still,
+        )
+        var roll = random.nextFloat() * weights.sumOf { it.second.toDouble() }.toFloat()
+        for ((kind, weight) in weights) {
+            roll -= weight
+            if (roll < 0f) return kind
+        }
+        return TrafficKind.BARRIER
+    }
+
+    /**
+     * A gate: a row of cones/barriers across all lanes but one, all arriving together. The open lane is
+     * near the player (within two lanes) so it can always be reached in time, and it is kept free of other
+     * obstacles around that moment. The row gets wider (fewer open lanes) as [late] grows. Returns whether
+     * a gate was added.
+     */
+    private fun spawnGate(difficulty: Float, late: Float): Boolean {
+        val lanes = HW_LANE_CENTERS.size
+        val blocked = minOf(lanes - 1, 2 + (late * 2.99f).toInt())
+        val open = (laneIndex + random.nextInt(5) - 2).coerceIn(0, lanes - 1)
+        val spawnZ = z + HW_DRAW_DISTANCE - 1f
+        val passIn = secondsUntilPassing(spawnZ, 0f)
+        val openClear = traffic.none { other ->
+            !other.passed && laneOf(other.lx) == open &&
+                abs(secondsUntilPassing(other.z, other.speed) - passIn) < SEPARATION_EASY + 0.4f
+        }
+        if (!openClear) return false
+        // The blocked lanes: the ones nearest the open lane first, so the gate reads as one wall with a gap.
+        val order = (0 until lanes).filter { it != open }
+            .sortedWith(compareBy<Int> { abs(it - open) }.thenBy { random.nextFloat() })
+            .take(blocked)
+        for (lane in order) {
+            val fair = traffic.none { other ->
+                !other.passed &&
+                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(abs(lane - laneOf(other.lx)), difficulty)
+            }
+            if (!fair) return false
+        }
+        order.forEachIndexed { i, lane ->
+            val kind = if ((i + lane) % 2 == 0) TrafficKind.BARRIER else TrafficKind.CONE
+            traffic.add(TrafficCar(nextId++, HW_LANE_CENTERS[lane], spawnZ, 0f, kind))
+        }
+        return true
+    }
+
+    /**
+     * Adds one obstacle, or none if no lane can take it fairly. Changing lanes takes time, so two
+     * obstacles in different lanes must pass the player far enough apart for the move between them
+     * (scaled with the lane distance) — otherwise random spawns create walls nobody can dodge. The
+     * required gaps tighten as [difficulty] rises. Returns whether an obstacle was added.
+     */
+    private fun spawnTraffic(difficulty: Float, late: Float): Boolean {
+        val kind = pickKind(late)
+        val carSpeed = kind.minSpeed + (kind.maxSpeed - kind.minSpeed) * random.nextFloat()
+        val spawnZ = z + HW_DRAW_DISTANCE - 1f
+        val passIn = secondsUntilPassing(spawnZ, carSpeed)
+
+        for (lane in obstacleLaneOrder()) {
+            val fair = traffic.none { other ->
+                !other.passed &&
+                    abs(secondsUntilPassing(other.z, other.speed) - passIn) < requiredGapSeconds(abs(lane - laneOf(other.lx)), difficulty)
+            }
+            if (!fair) continue
+            laneLastSpawn[lane] = elapsedSeconds
+            traffic.add(TrafficCar(nextId++, HW_LANE_CENTERS[lane], spawnZ, carSpeed, kind))
+            return true
+        }
+        return false
+    }
+
+    companion object {
+        const val START_SPEED = 20f
+
+        /** Top speed at the start of a run; it climbs to [MAX_SPEED] over [RAMP_SECONDS]. */
+        const val EARLY_TOP_SPEED = 27f
+        const val MAX_SPEED = 33f
+        const val RAMP_SECONDS = 120f
+        const val ACCELERATION = 1.4f
+
+        /**
+         * The lane-chasing spring: ~22 rad/s with a damping ratio of ~0.7, so a lane takes about
+         * 0.15 s and overshoots a few percent. CENTRIFUGAL scales how hard bends push the car.
+         */
+        const val LANE_SPRING = 480f
+        const val LANE_DAMPING = 31f
+        const val LATERAL_STEP = 1f / 120f
+        const val CENTRIFUGAL = 40f
+
+        /** Player's drawn width and its (slightly smaller) hitbox half-width, in road half-widths. */
+        const val PLAYER_DRAW_WIDTH = 0.28f
+        const val PLAYER_HALF_WIDTH = 0.125f
+        const val COLLISION_DEPTH = 0.45f
+        const val REMOVE_BEHIND = 4f
+        const val SCORE_PER_UNIT = 2.4f
+        const val NEAR_MISS_SCORE = 50
+        const val NEAR_MISS_FUEL = 3f
+
+        /** Extra lateral distance beyond touching that still counts as a near miss. */
+        const val NEAR_MISS_MARGIN = 0.10f
+        const val NEAR_MISS_FLASH_SECONDS = 0.9f
+
+        // "Fuel" is the runner's stamina (체력 on screen) and FUEL pickups are water bottles; the names stay
+        // from Lane Dash so the two engines and their tests line up. Fuel and pickups (the drain is gentle:
+        // pickups sit in lanes you also have to dodge in).
+        const val MAX_FUEL = 100f
+        const val FUEL_DRAIN_PER_SECOND = 3.5f
+        const val FUEL_REFILL_AMOUNT = 26f
+        const val ITEM_SPAWN_CHANCE = 0.18f
+        const val POWERUP_SPAWN_CHANCE = 0.05f
+        const val ITEM_SCORE_BONUS = 50
+        const val POWERUP_SCORE_BONUS = 25
+        const val SHIELD_DURATION_SECONDS = 6f
+
+        /** Grace shield after a rewarded continue, and how much traffic it clears around the car. */
+        const val CONTINUE_SHIELD_SECONDS = 2.5f
+        const val CONTINUE_CLEAR_AHEAD = 14f
+        const val CONTINUE_CLEAR_BEHIND = 2f
+        const val MAGNET_DURATION_SECONDS = 8f
+
+        /** A pickup's hitbox half-width, and the seconds it keeps clear of obstacles in its lane. */
+        const val ITEM_HALF_WIDTH = 0.10f
+        const val ITEM_CLEARANCE_SECONDS = 0.7f
+
+        /** World units ahead within which the magnet reels fuel cans in, and how fast (per second). */
+        const val MAGNET_RANGE = 9f
+        const val MAGNET_PULL_RATE = 10f
+
+        // Spawn events: seconds between attempts, easy -> hard, over DENSITY_RAMP_SECONDS.
+        const val DENSITY_RAMP_SECONDS = 40f
+        const val SPAWN_EASY_INTERVAL = 0.72f
+        const val SPAWN_HARD_INTERVAL = 0.3f
+        const val SPAWN_RETRY_INTERVAL = 0.08f
+
+        /** Obstacle lane choice: noise (seconds) on how long a lane has been empty, and a pull toward the player's lane. */
+        const val LANE_SPREAD_NOISE = 2.5f
+        const val LANE_NEAR_PLAYER_BIAS = 0.15f
+
+        // The late game: after RAMP_SECONDS the run keeps getting harder, so a skilled player is never
+        // safe forever. `late` climbs 0 -> 1 over LATE_RAMP_SECONDS.
+        /** When the late game starts, and how long it takes to reach full strength. */
+        const val LATE_START_SECONDS = 80f
+        const val LATE_RAMP_SECONDS = 100f
+
+        /** Extra top speed at late = 1. */
+        const val LATE_SPEED_BONUS = 15f
+
+        /** Fraction cut from the spawn interval at late = 1. */
+        const val LATE_INTERVAL_CUT = 0.7f
+
+        /** Extra fuel drain per second at late = 1. */
+        const val LATE_FUEL_DRAIN = 1f
+
+        /** Share of obstacle spawns that become a "gate" (a row of static obstacles with one open lane) at late = 1. */
+        const val GATE_CHANCE = 0.85f
+
+        /** Cones and barriers weigh this much more at late = 1 (moving traffic weighs less). */
+        const val LATE_STATIC_WEIGHT = 4.5f
+        const val LATE_MOVING_WEIGHT = 0.55f
+
+        /** Minimum seconds between two obstacles passing the player in the same lane, easy -> hard. */
+        const val SEPARATION_EASY = 0.37f
+        const val SEPARATION_HARD = 0.19f
+
+        /** Extra seconds required between two obstacles in the SAME lane, easy -> hard. */
+        const val SAME_LANE_EXTRA_EASY = 0.45f
+        const val SAME_LANE_EXTRA_HARD = 0.28f
+
+        /** Extra seconds required per lane of distance between two obstacles, easy -> hard. */
+        const val LANE_GAP_EASY = 0.3f
+        const val LANE_GAP_HARD = 0.17f
+        const val MIN_CLOSING_SPEED = 1f
+
+        /** Seconds two obstacles [laneDistance] lanes apart must pass the player apart at [difficulty]. */
+        fun requiredGapSeconds(laneDistance: Int, difficulty: Float): Float {
+            val separation = SEPARATION_EASY + (SEPARATION_HARD - SEPARATION_EASY) * difficulty
+            val perLane = LANE_GAP_EASY + (LANE_GAP_HARD - LANE_GAP_EASY) * difficulty
+            // Two obstacles in the same lane need extra room too: otherwise that lane is always the
+            // easiest slot and obstacles queue up in one lane while the rest of the road stays empty.
+            val sameLane = if (laneDistance == 0) SAME_LANE_EXTRA_EASY + (SAME_LANE_EXTRA_HARD - SAME_LANE_EXTRA_EASY) * difficulty else 0f
+            return separation + perLane * laneDistance + sameLane
+        }
+    }
+}

@@ -29,7 +29,7 @@ function resizeAppFrame() {
 window.addEventListener('resize', resizeAppFrame);
 resizeAppFrame();
 
-const HIGH_SCORE_KEY = 'path_dash_highway_high_score';
+const HIGH_SCORE_KEY = 'yorijori_run_highway_high_score';
 
 const state = {
   selectedCityId: CITIES[0].id,
@@ -61,7 +61,7 @@ const audio = new AudioManager();
 // ---------- VIBRATION ----------
 // Short buzzes on crashes / pickups where the browser supports it (mostly Android Chrome);
 // mirrors HapticsManager.kt. Silently does nothing elsewhere.
-const VIBRATION_KEY = 'path_dash_vibration';
+const VIBRATION_KEY = 'yorijori_run_vibration';
 let vibrationEnabled = localStorage.getItem(VIBRATION_KEY) !== 'off';
 const VIBRATION_MS = { CRASH: 220, FUEL_EMPTY: 120, NEAR_MISS: 25, COIN: 25, POWERUP: 25, SHIELD_HIT: 25 };
 
@@ -72,12 +72,12 @@ function vibrateFor(event) {
 }
 
 // Share links — keep in sync with GameUi.kt.
-const WEB_PLAY_URL = 'https://kwanghyeon-cpu.github.io/PathDash/web/';
-const STORE_URL = 'https://play.google.com/store/apps/details?id=com.khcompany.pathdash';
+const WEB_PLAY_URL = 'https://kwanghyeon-cpu.github.io/YorijoriRun/web/';
+const STORE_URL = 'https://play.google.com/store/apps/details?id=com.khcompany.yorijorirun';
 
 // Completed runs today (resets at local midnight), shown on the game-over card.
-const PLAYS_DAY_KEY = 'path_dash_plays_day';
-const PLAYS_TODAY_KEY = 'path_dash_plays_today';
+const PLAYS_DAY_KEY = 'yorijori_run_plays_day';
+const PLAYS_TODAY_KEY = 'yorijori_run_plays_today';
 
 function todayKey() {
   const d = new Date();
@@ -369,7 +369,7 @@ function showGameOver() {
 document.getElementById('btn-share').addEventListener('click', async () => {
   const best = Math.max(state.highScore, lastRunScore);
   const city = cityById(state.selectedCityId);
-  const text = `🚗💨 Path Dash — ${city.name}에서 ${lastRunScore}점! (내 최고 ${best}점)\n` +
+  const text = `🏃💨 요리조리 런 — ${city.name}에서 ${lastRunScore}점! (내 최고 ${best}점)\n` +
     `웹에서 바로 플레이 → ${WEB_PLAY_URL}\nGoogle Play → ${STORE_URL}`;
   const btn = document.getElementById('btn-share');
   const label = btn.querySelector('.btn-label');

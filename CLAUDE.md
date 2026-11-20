@@ -1,4 +1,6 @@
-# Path Dash (임시 이름)
+# 요리조리 런
+
+이름은 2026-11-20에 **요리조리 런**(코드 `YorijoriRun`, 패키지 `com.khcompany.yorijorirun`)으로 정했다. 임시 이름이던 Path Dash는 프로젝트 폴더 이름(`D:\Dev\PathDash`)에만 남아 있다.
 
 Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 운영 중인 앱)를 복제해 만든 **새 게임**. 게임 방식은 그대로 두고, 조종 대상을 자동차에서 조깅·자전거·리어카·킥보드 4종(앱 id `jogging`/`bicycle`/`cart`/`kickboard`)으로, 무대를 도로에서 산책로·자전거길 느낌의 "길"로 바꾸는 것이 목표다.
 
@@ -8,13 +10,13 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 엔진은 순수 로직이고 앱과 웹이 같은 값을 쓴다: `app/.../game/highway/HighwayEngine.kt`·`HighwayRoad.kt` ↔ `web/js/highway-engine.js`. **숫자를 바꾸면 양쪽을 같이 바꾼다.**
 - 렌더링: `ui/screens/HighwayScreen.kt`·`HighwayFx.kt` ↔ `web/js/highway-render.js`.
 - 체력·생수병·방어막·자석(코드에서는 Lane Dash 이름 그대로 `fuel`/`FUEL`. 화면 문구와 그림만 체력·생수로 바꿨다), 근접 회피 보너스, 후반 난이도 상승(`late`), 게이트(한 차선만 비운 장애물 줄).
-- 광고: 게임오버 전면광고(10판마다) + 보상형 이어하기. 순위표: Firestore `scores_pathdash`.
+- 광고: 게임오버 전면광고(10판마다) + 보상형 이어하기. 순위표: Firestore `scores_yorijorirun`.
 
 ## 이 프로젝트에서 지켜야 할 것
 
 - **Lane Dash의 계정 ID를 절대 다시 쓰지 않는다.** AdMob은 지금 Google 샘플 ID, 실제 ID는 이 게임 전용으로 새로 받는다.
 - `app/google-services.json`은 빌드용 임시 파일(로컬 전용, gitignore). Firebase에 이 앱을 등록하면 교체.
-- 이름이 정해지면 `node tools/rename-project.cjs PathDash <New> "Path Dash" "<New Name>"` 한 번으로 패키지·클래스·표시 이름·저장 키를 바꾼다. 패키지명은 스토어에 올린 뒤에는 못 바꾼다.
+- 스토어에 올리기 전에 이름을 다시 바꿀 일이 생기면 `node tools/rename-project.cjs YorijoriRun <New> "요리조리 런" "<New Name>"` 한 번으로 패키지·클래스·표시 이름·저장 키·순위표 컬렉션을 바꾼다. 패키지명은 스토어에 올린 뒤에는 못 바꾼다.
 - 사람·아기가 다치는 표현은 피한다(사람 장애물은 "피하는" 표현, 부딪히면 "부딪혔어요" 정도로).
 - 아이콘은 Iconify에서 가져오고 세트별 라이선스를 확인한다(전역 지침).
 

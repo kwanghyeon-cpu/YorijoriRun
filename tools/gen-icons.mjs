@@ -68,7 +68,7 @@ const dOf = (id) => {
 const label = (id) => (id.includes(':') ? id : `ph:${id}`);
 const data = ICONS.map(([k, js, id]) => ({ k, js, id, d: dOf(id) }));
 
-const kt = `package com.khcompany.pathdash.ui.components
+const kt = `package com.khcompany.yorijorirun.ui.components
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -149,6 +149,6 @@ function drawIconGlyph(ctx, name, cx, cy, size, color) {
 }
 `;
 
-fs.writeFileSync(path.join(root, 'app/src/main/java/com/khcompany/pathdash/ui/components/GameIcons.kt'), kt);
+fs.writeFileSync(path.join(root, 'app/src/main/java/com/khcompany/yorijorirun/ui/components/GameIcons.kt'), kt);
 fs.writeFileSync(path.join(root, 'web/js/icons.js'), js);
 console.log('wrote', data.length, 'icons');

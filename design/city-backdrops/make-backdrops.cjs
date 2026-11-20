@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const SRC = path.join(__dirname, 'gemini-originals');
-const OUT = path.join(require('os').tmpdir(), 'pathdash-backdrops'); // then copy city_*.png to app/src/main/res/drawable-nodpi and web/assets/cities
+const OUT = path.join(require('os').tmpdir(), 'yorijorirun-backdrops'); // then copy city_*.png to app/src/main/res/drawable-nodpi and web/assets/cities
 fs.mkdirSync(OUT, { recursive: true });
 
 const mix = (a, b, t) => {

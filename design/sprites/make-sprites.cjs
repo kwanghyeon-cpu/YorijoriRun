@@ -15,7 +15,7 @@ const dry = args.includes('--dry');
 const srcAt = args.indexOf('--src');
 const SRC = srcAt >= 0 ? path.resolve(args[srcAt + 1]) : path.join(__dirname, 'gemini-originals');
 const DESTS = dry
-  ? [path.join(os.tmpdir(), 'pathdash-sprites')]
+  ? [path.join(os.tmpdir(), 'yorijorirun-sprites')]
   : [path.join(ROOT, 'app/src/main/res/drawable-nodpi'), path.join(ROOT, 'web/assets/rear')];
 
 // File name -> output width in px (the widths of the Lane Dash sprites these replace).
@@ -90,8 +90,8 @@ for (const [name, width] of Object.entries(SPRITES)) {
   if (!ext) continue;
   const src = path.join(SRC, name + ext);
   const out = path.join(DESTS[0], name + '.png');
-  const keyed = path.join(os.tmpdir(), `pathdash-sprite-${name}.png`);
-  const mask = path.join(os.tmpdir(), `pathdash-sprite-${name}-mask.png`);
+  const keyed = path.join(os.tmpdir(), `yorijorirun-sprite-${name}.png`);
+  const mask = path.join(os.tmpdir(), `yorijorirun-sprite-${name}-mask.png`);
   magick(
     src, '-alpha', 'set',
     // Every magenta-ish pixel goes transparent (the prompt keeps magenta off the subject, so this

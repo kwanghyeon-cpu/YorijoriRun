@@ -1,0 +1,868 @@
+package com.khcompany.yorijorirun.ui.screens
+
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.rotate
+import com.khcompany.yorijorirun.ui.components.WATER_ITEM_COLOR
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.khcompany.yorijorirun.ads.AdManager
+import com.khcompany.yorijorirun.audio.SoundManager
+import com.khcompany.yorijorirun.game.CarOption
+import com.khcompany.yorijorirun.game.CityTheme
+import com.khcompany.yorijorirun.game.GameStatus
+import kotlin.math.ceil
+import com.khcompany.yorijorirun.ui.components.drawShieldItem
+import com.khcompany.yorijorirun.ui.components.drawShieldBubble
+import com.khcompany.yorijorirun.ui.components.drawMagnetItem
+import com.khcompany.yorijorirun.ui.components.drawMagnetAura
+import com.khcompany.yorijorirun.ui.components.drawWaterBottleItem
+import com.khcompany.yorijorirun.ui.components.SHIELD_ITEM_COLOR
+import com.khcompany.yorijorirun.ui.components.MAGNET_ITEM_COLOR
+import com.khcompany.yorijorirun.game.ItemType
+import com.khcompany.yorijorirun.game.GameOverReason
+import com.khcompany.yorijorirun.game.LeaderboardRepository
+import com.khcompany.yorijorirun.game.highway.HW_DRAW_DISTANCE
+import com.khcompany.yorijorirun.game.highway.HW_HORIZON_FRACTION
+import com.khcompany.yorijorirun.game.highway.HW_LANE_COUNT
+import com.khcompany.yorijorirun.game.highway.HW_LANE_SPACING
+import com.khcompany.yorijorirun.game.highway.HW_PLAYER_T
+import com.khcompany.yorijorirun.game.highway.fadeForDz
+import com.khcompany.yorijorirun.game.highway.roadHalfWidth
+import com.khcompany.yorijorirun.game.highway.tForDz
+import com.khcompany.yorijorirun.game.highway.HighwayEngine
+import com.khcompany.yorijorirun.game.highway.RoadStrips
+import com.khcompany.yorijorirun.game.highway.TrafficKind
+import com.khcompany.yorijorirun.game.highway.skylineScroll
+import com.khcompany.yorijorirun.haptics.HapticsManager
+import com.khcompany.yorijorirun.ui.components.GameIcon
+import com.khcompany.yorijorirun.ui.components.SpriteCache
+import com.khcompany.yorijorirun.ui.components.drawCitySkylineSprite
+import com.khcompany.yorijorirun.ui.components.drawGroundShadow
+import com.khcompany.yorijorirun.ui.components.drawRoadHaze
+import kotlin.math.floor
+import kotlin.math.hypot
+import kotlin.math.max
+import kotlin.math.roundToInt
+import kotlin.math.sin
+
+private const val STRIPE_LENGTH = 1f
+
+/** Speedometer scale: world units per second to the KM/H shown in the HUD. */
+// Path speeds, not car speeds: the engine's 20..33 units read as about 15..25 km/h.
+private const val KMH_PER_UNIT = 0.75f
+
+// Lane dividers are short dashes, like a real highway: one dash per DASH_PERIOD world units. Far
+// away a dash is thinner than a screen row and would shimmer, so past DASH_FADE_DISTANCE the
+// divider is drawn as a faint continuous line instead.
+private const val DASH_PERIOD = 1.2f
+private const val DASH_FRACTION = 0.33f
+private const val DASH_FADE_DISTANCE = 14f
+
+/** Scale applied to the road layer so its vibration never exposes an empty edge. */
+private const val SHAKE_ZOOM = 1.02f
+private const val MAX_LEAN_DEGREES = 4f
+private const val VIGNETTE_MAX_ALPHA = 0.5f
+
+/** The left/right lane buttons are big: they are the main controls, tapped constantly. */
+private val LANE_BUTTON_SIZE = 84.dp
+
+/** How long the "LEVEL UP" notice stays up when the late game begins. */
+private const val LEVEL_UP_SECONDS = 3f
+
+/** Pickup badge radius, in road half-widths at the same depth. */
+private const val ITEM_RADIUS = 0.17f
+private val ROAD_GRASS = Color(0xFF2E7D32)
+// The path's edge is a pale stone curb in two shades (Lane Dash had red-and-white racing kerbs).
+private val CURB_SHADE = Color(0xFFB9B0A1)
+private val CURB_LIGHT = Color(0xFFDCD5C8)
+
+/**
+ * The game: a behind-the-car "OutRun" road. Lane buttons (or a sideways swipe) move one lane per
+ * press. Portrait only (the manifest locks the activity to portrait).
+ */
+@Composable
+fun HighwayScreen(
+    city: CityTheme,
+    car: CarOption,
+    highScore: Int,
+    playsToday: Int,
+    adManager: AdManager,
+    onScoreFinal: (Int) -> Unit,
+    onGameOverAndShouldShowInterstitial: () -> Boolean,
+    leaderboardRepository: LeaderboardRepository,
+    onSubmitScore: (name: String) -> Unit,
+    onViewLeaderboard: () -> Unit,
+    onExit: () -> Unit,
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val soundManager = remember { SoundManager(context) }
+    val haptics = remember { HapticsManager(context) }
+    val engine = remember {
+        HighwayEngine(onSfx = {
+            soundManager.play(it)
+            haptics.onEvent(it)
+        })
+    }
+    val strips = remember { RoadStrips() }
+    var skyline by remember { mutableStateOf<ImageBitmap?>(null) }
+    var playerSprite by remember { mutableStateOf<ImageBitmap?>(null) }
+    var trafficSprites by remember { mutableStateOf<Map<TrafficKind, ImageBitmap?>>(emptyMap()) }
+    var ready by remember { mutableStateOf(false) }
+
+    // Reused every frame: one batched path per color instead of hundreds of separate rects.
+    val darkGrass = remember { Path() }
+    val roadLight = remember { Path() }
+    val roadDark = remember { Path() }
+    val rumbleRed = remember { Path() }
+    val rumbleWhite = remember { Path() }
+    val laneMarks = remember { Path() }
+    val laneMarksFar = remember { Path() }
+    val roadside = remember { RoadsideBatch() }
+
+    DisposableEffect(Unit) {
+        onDispose { soundManager.release() }
+    }
+
+    DisposableEffect(activity) {
+        val lifecycle = (activity as? ComponentActivity)?.lifecycle
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) engine.pause()
+        }
+        lifecycle?.addObserver(observer)
+        onDispose { lifecycle?.removeObserver(observer) }
+    }
+
+    LaunchedEffect(engine.paused) {
+        if (engine.paused) soundManager.pauseBgm() else soundManager.resumeBgm()
+    }
+
+    LaunchedEffect(Unit) {
+        skyline = SpriteCache.load(context, city.spriteName)
+        playerSprite = SpriteCache.load(context, car.rearSpriteName)
+        trafficSprites = TrafficKind.entries.associateWith { SpriteCache.load(context, it.spriteName) }
+        ready = true
+        engine.start()
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            soundManager.startBgm()
+        }
+    }
+
+    LaunchedEffect(engine.status) {
+        if (engine.status == GameStatus.RUNNING) {
+            var lastFrameNanos = -1L
+            while (engine.status == GameStatus.RUNNING) {
+                androidx.compose.runtime.withFrameNanos { frameNanos ->
+                    if (lastFrameNanos >= 0L) engine.tick((frameNanos - lastFrameNanos) / 1_000_000_000f)
+                    lastFrameNanos = frameNanos
+                }
+            }
+        } else if (engine.status == GameStatus.GAME_OVER) {
+            onScoreFinal(engine.score)
+            // Interstitials are gated to roughly every Nth game (see
+            // GameSessionViewModel.onGameOverAndShouldShowInterstitial), not shown after every
+            // short run. A rewarded continue resumes the same run, so it counts once, when the
+            // run finally ends.
+            if (!engine.usedContinue && onGameOverAndShouldShowInterstitial() && activity != null) {
+                adManager.showInterstitial(activity) {}
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                // Road vibration: grows with speed, and the grass shakes the car much harder. The
+                // slight zoom keeps the shifted frame from showing an empty edge.
+                .graphicsLayer {
+                    val speedRatio = (engine.speed / HighwayEngine.MAX_SPEED).coerceIn(0f, 1f)
+                    val amplitude = size.height * 0.0009f * speedRatio * speedRatio
+                    scaleX = SHAKE_ZOOM
+                    scaleY = SHAKE_ZOOM
+                    translationY = (sin(engine.z * 1.7f) * 0.6f + sin(engine.z * 4.1f) * 0.4f) * amplitude
+                },
+        ) {
+            if (!ready) {
+                drawRect(Color.Black)
+                return@Canvas
+            }
+            val w = size.width
+            val h = size.height
+            val horizonY = h * HW_HORIZON_FRACTION
+            val roadH = h - horizonY
+            val rowH = max(3f, roadH / 110f)
+
+            // The road first: the skyline reads its bend (see skylineScroll).
+            strips.compute(engine.z, w, horizonY, h, rowH, STRIPE_LENGTH)
+
+            val sky = skyline
+            if (sky != null) {
+                drawCitySkylineSprite(sky, horizonY, skylineScroll(strips, w), 1f)
+            } else {
+                drawRect(
+                    brush = Brush.verticalGradient(listOf(city.skyTop, city.skyBottom), endY = horizonY),
+                    size = Size(w, horizonY),
+                )
+            }
+
+            val grassLight = lerp(ROAD_GRASS, city.haze, 0.2f)
+            val grassDark = lerp(Color(0xFF276B2A), city.haze, 0.2f)
+            drawRect(grassLight, Offset(0f, horizonY), Size(w, roadH))
+
+            darkGrass.reset(); roadLight.reset(); roadDark.reset()
+            rumbleRed.reset(); rumbleWhite.reset(); laneMarks.reset(); laneMarksFar.reset()
+            for (i in 0 until strips.count) {
+                val top = strips.yTop[i]
+                val bottom = strips.yBottom[i] + 0.5f
+                val cx = strips.centerX[i]
+                val hw = strips.halfWidth[i]
+                val odd = strips.band[i] == 1
+                if (odd) darkGrass.addRect(Rect(0f, top, w, bottom))
+                val rumble = hw * 0.14f
+                val rumblePath = if (odd) rumbleWhite else rumbleRed
+                rumblePath.addRect(Rect(cx - hw - rumble, top, cx - hw, bottom))
+                rumblePath.addRect(Rect(cx + hw, top, cx + hw + rumble, bottom))
+                (if (odd) roadDark else roadLight).addRect(Rect(cx - hw, top, cx + hw, bottom))
+                val depth = strips.dz[i]
+                val dashPhase = (engine.z + depth) / DASH_PERIOD
+                val far = depth > DASH_FADE_DISTANCE
+                if (far || dashPhase - floor(dashPhase) < DASH_FRACTION) {
+                    val half = hw * 0.02f
+                    val marks = if (far) laneMarksFar else laneMarks
+                    for (divider in 1 until HW_LANE_COUNT) {
+                        val x = cx + (-1f + HW_LANE_SPACING * divider) * hw
+                        marks.addRect(Rect(x - half, top, x + half, bottom))
+                    }
+                }
+            }
+            drawPath(darkGrass, grassDark)
+            drawPath(rumbleRed, CURB_SHADE)
+            drawPath(rumbleWhite, CURB_LIGHT)
+            drawPath(roadLight, lerp(city.roadColor, Color.White, 0.10f))
+            drawPath(roadDark, lerp(city.roadColor, Color.White, 0.05f))
+            drawPath(laneMarksFar, city.roadLineColor.copy(alpha = 0.4f))
+            drawPath(laneMarks, city.roadLineColor.copy(alpha = 0.9f))
+            drawRoadside(
+                batch = roadside,
+                strips = strips,
+                cameraZ = engine.z,
+                horizonY = horizonY,
+                rowHeight = rowH,
+                postColor = lerp(Color(0xFF3A3F4B), city.haze, 0.15f),
+                lampColor = Color(0xFFFFE9A8),
+                bushColor = lerp(Color(0xFF1F5E27), city.haze, 0.2f),
+            )
+            drawRoadHaze(city, horizonY)
+            drawSpeedLines(
+                speedRatio = engine.speed / HighwayEngine.MAX_SPEED,
+                elapsedSeconds = engine.elapsedSeconds,
+                focalY = horizonY + roadH * 0.2f,
+            )
+
+            // Pickups, far to near; they hover just above the road with a small shadow.
+            for (item in engine.items.sortedByDescending { it.z }) {
+                val dz = item.z - engine.z
+                if (dz < 1f || dz > HW_DRAW_DISTANCE) continue
+                val t = tForDz(dz)
+                val y = horizonY + roadH * t
+                val half = roadHalfWidth(t, w)
+                val pulse = 1f + 0.08f * sin(engine.elapsedSeconds * 6f + item.id)
+                val radius = ITEM_RADIUS * half * pulse
+                val cx = strips.centerXAt(y, h, rowH) + item.lx * half
+                val color = when (item.type) {
+                    ItemType.FUEL -> WATER_ITEM_COLOR
+                    ItemType.SHIELD -> SHIELD_ITEM_COLOR
+                    ItemType.MAGNET -> MAGNET_ITEM_COLOR
+                }
+                // A pickup must never be mistaken for a car: a pad ringed on the road, a halo, a
+                // white rim and a gentle bob — none of which a vehicle or an obstacle has.
+                withFade(fadeForDz(dz), Rect(cx - radius * 3.5f, y - radius * 5.5f, cx + radius * 3.5f, y + radius)) {
+                drawOval(
+                    color = color.copy(alpha = 0.85f),
+                    topLeft = Offset(cx - radius * 1.5f, y - radius * 0.38f),
+                    size = Size(radius * 3f, radius * 0.76f),
+                    style = Stroke(width = max(2f, radius * 0.14f)),
+                )
+                val center = Offset(cx, y - radius * 1.35f + sin(engine.elapsedSeconds * 4f + item.id) * radius * 0.12f)
+                drawCircle(
+                    brush = Brush.radialGradient(listOf(color.copy(alpha = 0.6f), Color.Transparent), center = center, radius = radius * 2.3f),
+                    radius = radius * 2.3f,
+                    center = center,
+                )
+                when (item.type) {
+                    ItemType.FUEL -> drawWaterBottleItem(center, radius)
+                    ItemType.SHIELD -> drawShieldItem(center, radius)
+                    ItemType.MAGNET -> drawMagnetItem(center, radius)
+                }
+                drawCircle(Color.White.copy(alpha = 0.9f), radius = radius * 1.1f, center = center, style = Stroke(width = max(1.5f, radius * 0.1f)))
+                }
+            }
+
+            // Traffic, far to near so closer cars paint over farther ones.
+            for (traffic in engine.traffic.sortedByDescending { it.z }) {
+                val dz = traffic.z - engine.z
+                if (dz < 1f || dz > HW_DRAW_DISTANCE) continue
+                val t = tForDz(dz)
+                val y = horizonY + roadH * t
+                val half = roadHalfWidth(t, w)
+                val width = traffic.kind.drawHalfWidth * 2f * half
+                val cx = strips.centerXAt(y, h, rowH) + traffic.lx * half
+                val trafficSprite = trafficSprites[traffic.kind]
+                // The fade layer must hold the whole sprite, tall riders included.
+                val top = y - width * (traffic.kind.heightFactor + 0.3f)
+                withFade(fadeForDz(dz), Rect(cx - width, top, cx + width, y + width * 0.2f)) {
+                    if (trafficSprite != null) {
+                        drawRearSprite(trafficSprite, cx = cx, bottomY = y, width = width)
+                    } else {
+                        val (body, roof) = trafficColors(traffic.kind)
+                        drawRearCar(cx, y, width, traffic.kind.heightFactor, body, roof)
+                    }
+                }
+            }
+
+            val playerY = horizonY + roadH * HW_PLAYER_T
+            // The road is fixed at the bottom of the screen: the car moves across it.
+            val playerHalf = roadHalfWidth(HW_PLAYER_T, w)
+            val playerCx = strips.centerXAt(playerY, h, rowH) + engine.playerX * playerHalf
+            val playerWidth = HighwayEngine.PLAYER_DRAW_WIDTH * playerHalf
+            val sprite = playerSprite
+            val playerHeight = if (sprite != null) playerWidth * sprite.height / sprite.width else playerWidth * 0.8f
+            if (sprite != null) {
+                drawRearSprite(
+                    sprite,
+                    cx = playerCx,
+                    bottomY = playerY,
+                    width = playerWidth,
+                    leanDegrees = engine.steerLean * MAX_LEAN_DEGREES,
+                )
+            } else {
+                drawRearCar(
+                    cx = playerCx,
+                    bottomY = playerY,
+                    width = playerWidth,
+                    heightFactor = 0.8f,
+                    body = car.bodyColor,
+                    roof = car.roofColor,
+                )
+            }
+            // Power-up effects around the car.
+            val bodyCenter = Offset(playerCx, playerY - playerHeight / 2f)
+            if (engine.magnetTimeLeft > 0f) {
+                drawMagnetAura(bodyCenter, playerWidth * 0.62f, playerHeight * 0.95f, engine.elapsedSeconds * 60f)
+            }
+            if (engine.shieldTimeLeft > 0f) {
+                // Blinks during the last 1.5 s so you see it about to run out.
+                val ending = engine.shieldTimeLeft < 1.5f
+                val alpha = if (ending && (engine.shieldTimeLeft * 8f).toInt() % 2 == 0) 0.3f else 1f
+                drawShieldBubble(bodyCenter, playerWidth * 0.58f, playerHeight * 0.85f, alpha)
+            }
+        }
+
+        // Tunnel vision: the screen edges darken as the speed climbs.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawWithCache {
+                    val brush = Brush.radialGradient(
+                        0.5f to Color.Transparent,
+                        1f to Color.Black,
+                        center = Offset(size.width / 2f, size.height * 0.55f),
+                        radius = hypot(size.width, size.height) * 0.55f,
+                    )
+                    onDrawBehind {
+                        val speedRatio = (engine.speed / HighwayEngine.MAX_SPEED).coerceIn(0f, 1f)
+                        val alpha = ((speedRatio - 0.5f) / 0.5f).coerceIn(0f, 1f) * VIGNETTE_MAX_ALPHA
+                        if (alpha > 0.01f) drawRect(brush, alpha = alpha)
+                    }
+                },
+        )
+
+        // A sideways swipe moves one lane that way, the
+        // buttons below do the same with a tap.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    var dragAccum = 0f
+                    detectHorizontalDragGestures(
+                        onDragStart = { dragAccum = 0f },
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            dragAccum += dragAmount
+                            when {
+                                dragAccum > 50f -> {
+                                    engine.moveLane(1)
+                                    dragAccum = 0f
+                                }
+                                dragAccum < -50f -> {
+                                    engine.moveLane(-1)
+                                    dragAccum = 0f
+                                }
+                            }
+                        },
+                    )
+                },
+        )
+
+        HighwayHud(engine, highScore, modifier = Modifier.fillMaxSize())
+
+        if (engine.status == GameStatus.RUNNING && !engine.paused) {
+            HighwayControls(
+                onLeft = { engine.moveLane(-1) },
+                onRight = { engine.moveLane(1) },
+                onPause = { engine.pause() },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+
+        if (engine.status == GameStatus.RUNNING && engine.paused) {
+            HighwayDialog(title = "일시정지") {
+                Button(onClick = { engine.resume() }, modifier = Modifier.fillMaxWidth()) {
+                    ButtonLabel(GameIcon.PLAY, "계속하기")
+                }
+                Button(
+                    onClick = { engine.start() },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    ButtonLabel(GameIcon.RETRY, "다시 시작", MaterialTheme.colorScheme.onBackground)
+                }
+                Button(
+                    onClick = { haptics.toggle(!haptics.enabled) },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    ButtonLabel(
+                        GameIcon.VIBRATE,
+                        if (haptics.enabled) "진동: 켜짐" else "진동: 꺼짐",
+                        MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+                Button(
+                    onClick = onExit,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    ButtonLabel(GameIcon.HOME, "HOME", MaterialTheme.colorScheme.onBackground)
+                }
+            }
+        }
+
+        if (engine.status == GameStatus.GAME_OVER) {
+            HighwayDialog(title = "GAME OVER") {
+                Text(
+                    text = if (engine.gameOverReason == GameOverReason.FUEL_EMPTY) "체력 소진" else "부딪혔어요",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+                Text(
+                    text = "SCORE ${engine.score}",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = if (engine.score >= highScore) "NEW BEST!" else "BEST $highScore",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+                val statColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                Text(
+                    text = "생존 ${engine.elapsedSeconds.toInt()}초 · 근접 회피 ${engine.nearMissCount}회 · 생수 ${engine.fuelCollected}병",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
+                    color = statColor,
+                )
+                Text(
+                    text = "오늘 ${playsToday}번째 판",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
+                    color = statColor,
+                    modifier = Modifier.padding(bottom = 14.dp),
+                )
+                var continueRequested by remember { mutableStateOf(false) }
+                if (!engine.usedContinue && adManager.isRewardedReady && !continueRequested) {
+                    Button(
+                        onClick = {
+                            continueRequested = true
+                            activity?.let { a ->
+                                adManager.showRewarded(a, onReward = { engine.continueAfterAd() }, onUnavailable = { continueRequested = false })
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                    ) {
+                        ButtonLabel(GameIcon.PLAY_CIRCLE, "광고 보고 계속하기")
+                    }
+                }
+                HighwayRankSection(
+                    score = engine.score,
+                    leaderboardRepository = leaderboardRepository,
+                    soundManager = soundManager,
+                    onSubmitScore = onSubmitScore,
+                )
+                Button(
+                    onClick = onViewLeaderboard,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                ) {
+                    ButtonLabel(GameIcon.RANKING, "순위표", MaterialTheme.colorScheme.onBackground)
+                }
+                Button(
+                    onClick = { shareScore(context, engine.score, maxOf(highScore, engine.score), city.displayName) },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                ) {
+                    ButtonLabel(GameIcon.SHARE, "공유하기", MaterialTheme.colorScheme.onBackground)
+                }
+                Button(onClick = { engine.start() }, modifier = Modifier.fillMaxWidth()) {
+                    ButtonLabel(GameIcon.RETRY, "RETRY")
+                }
+                Button(
+                    onClick = onExit,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    ButtonLabel(GameIcon.HOME, "HOME", MaterialTheme.colorScheme.onBackground)
+                }
+            }
+        }
+    }
+}
+
+/** Left / right lane buttons (one lane per tap) with a small pause button between them. */
+@Composable
+private fun HighwayControls(onLeft: () -> Unit, onRight: () -> Unit, onPause: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.displayCutout)
+            .padding(horizontal = 24.dp, vertical = 28.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        LaneButton(icon = GameIcon.CARET_LEFT, description = "왼쪽 차선", onClick = onLeft, size = LANE_BUTTON_SIZE)
+        LaneButton(icon = GameIcon.PAUSE, description = "일시정지", onClick = onPause)
+        LaneButton(icon = GameIcon.CARET_RIGHT, description = "오른쪽 차선", onClick = onRight, size = LANE_BUTTON_SIZE)
+    }
+}
+
+@Composable
+private fun HighwayHud(engine: HighwayEngine, highScore: Int, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.windowInsetsPadding(WindowInsets.displayCutout)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column {
+                HudIconText(
+                    icon = GameIcon.GAUGE,
+                    text = "${(engine.speed * KMH_PER_UNIT).roundToInt()} KM/H",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleLarge,
+                    iconSize = 24,
+                )
+                if (engine.shieldTimeLeft > 0f) {
+                    HudIconText(
+                        icon = GameIcon.SHIELD,
+                        text = "방어막 ${ceil(engine.shieldTimeLeft).toInt()}초",
+                        color = SHIELD_ITEM_COLOR,
+                        style = MaterialTheme.typography.bodyLarge,
+                        iconSize = 18,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                if (engine.magnetTimeLeft > 0f) {
+                    HudIconText(
+                        icon = GameIcon.MAGNET,
+                        text = "자석 ${ceil(engine.magnetTimeLeft).toInt()}초",
+                        color = MAGNET_ITEM_COLOR,
+                        style = MaterialTheme.typography.bodyLarge,
+                        iconSize = 18,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "SCORE ${engine.score}",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = "BEST $highScore",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+        }
+        StaminaGauge(
+            staminaFraction = { engine.fuel / HighwayEngine.MAX_FUEL },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 76.dp),
+        )
+        if (engine.nearMissFlash > 0f) {
+            Text(
+                text = "NEAR MISS +${HighwayEngine.NEAR_MISS_SCORE}",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 150.dp)
+                    .alpha((engine.nearMissFlash / HighwayEngine.NEAR_MISS_FLASH_SECONDS * 1.6f).coerceIn(0f, 1f)),
+            )
+        }
+        // The late game starts: a short notice that things are about to speed up.
+        val sinceLate = engine.elapsedSeconds - HighwayEngine.LATE_START_SECONDS
+        if (engine.status == GameStatus.RUNNING && sinceLate in 0f..LEVEL_UP_SECONDS) {
+            Text(
+                text = "LEVEL UP!  더 빨라져요",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 150.dp)
+                    .alpha((1f - sinceLate / LEVEL_UP_SECONDS).coerceIn(0f, 1f)),
+            )
+        }
+        if (engine.status == GameStatus.RUNNING && engine.elapsedSeconds < 4f) {
+            Text(
+                text = "버튼을 눌러 한 차선씩 옮겨요",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 140.dp),
+            )
+        }
+    }
+}
+
+/** Checks the run against the highway TOP 10 and, if it makes it, asks for a name to submit. */
+@Composable
+private fun HighwayRankSection(
+    score: Int,
+    leaderboardRepository: LeaderboardRepository,
+    soundManager: SoundManager,
+    onSubmitScore: (name: String) -> Unit,
+) {
+    var qualifies by remember(score) { mutableStateOf<Boolean?>(null) }
+    var pointsToTop by remember(score) { mutableStateOf<Int?>(null) }
+    var submitted by remember(score) { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    LaunchedEffect(score) {
+        val top = try {
+            leaderboardRepository.fetchTopScores(10)
+        } catch (e: Exception) {
+            android.util.Log.e("Leaderboard", "fetchTopScores failed", e)
+            null
+        }
+        qualifies = top != null && score > 0 && (top.size < 10 || score > top.last().score)
+        pointsToTop = if (top != null && top.size >= 10 && score <= top.last().score) {
+            top.last().score - score + 1
+        } else {
+            null
+        }
+        if (qualifies == true) soundManager.playNewBest()
+    }
+
+    pointsToTop?.let {
+        Text(
+            text = "TOP 10까지 ${it}점!",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.padding(bottom = 10.dp),
+        )
+    }
+    if (qualifies == true && !submitted) {
+        HudIconText(
+            icon = GameIcon.TROPHY,
+            text = "TOP 10 진입!",
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodyLarge,
+            iconSize = 20,
+            modifier = Modifier.padding(bottom = 6.dp),
+        )
+        OutlinedTextField(
+            value = name,
+            onValueChange = { if (it.length <= 12) name = it },
+            singleLine = true,
+            placeholder = { Text("이름 입력") },
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            onClick = {
+                submitted = true
+                onSubmitScore(name)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp),
+        ) {
+            Text(text = "등록하기", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun HighwayDialog(title: String, content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.72f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.84f)
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp))
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+            content()
+        }
+    }
+}
+
+private fun trafficColors(kind: TrafficKind): Pair<Color, Color> = when (kind) {
+    TrafficKind.SEDAN -> Color(0xFF8D99AE) to Color(0xFF2B2D3A)
+    TrafficKind.SUV -> Color(0xFF5C6478) to Color(0xFF2B2D3A)
+    TrafficKind.BUS -> Color(0xFFA7AFBF) to Color(0xFF2B2D3A)
+    TrafficKind.TRUCK -> Color(0xFF7F8CA8) to Color(0xFF3B4256)
+    TrafficKind.CONE -> Color(0xFFFF7A1A) to Color(0xFFFFFFFF)
+    TrafficKind.BARRIER -> Color(0xFFE8E8E8) to Color(0xFFE63946)
+}
+
+/**
+ * Runs [block] at [fade] opacity (things entering at the far end fade in instead of popping up). Only
+ * the small [bounds] are put on a separate layer, and only while the thing is actually fading.
+ */
+private inline fun DrawScope.withFade(fade: Float, bounds: Rect, block: DrawScope.() -> Unit) {
+    if (fade >= 0.99f) {
+        block()
+        return
+    }
+    val paint = Paint().apply { alpha = fade }
+    drawIntoCanvas { it.saveLayer(bounds, paint) }
+    block()
+    drawIntoCanvas { it.restore() }
+}
+
+/** Draws a rear-view sprite bottom-anchored at [bottomY]; the height follows the image's own aspect. */
+private fun DrawScope.drawRearSprite(
+    sprite: ImageBitmap,
+    cx: Float,
+    bottomY: Float,
+    width: Float,
+    leanDegrees: Float = 0f,
+) {
+    val height = width * sprite.height / sprite.width
+    drawGroundShadow(cx, bottomY, width, height)
+    // Leaning pivots on the tires' contact line so the car rolls into the turn, not off its shadow.
+    rotate(leanDegrees, pivot = Offset(cx, bottomY)) {
+        drawImage(
+            image = sprite,
+            srcSize = IntSize(sprite.width, sprite.height),
+            dstOffset = IntOffset((cx - width / 2f).roundToInt(), (bottomY - height).roundToInt()),
+            dstSize = IntSize(width.roundToInt(), height.roundToInt()),
+            filterQuality = FilterQuality.Medium,
+        )
+    }
+}
+
+/** Placeholder rear view: wheels, body, cabin and two tail lights — replaced by sprites later. */
+private fun DrawScope.drawRearCar(cx: Float, bottomY: Float, width: Float, heightFactor: Float, body: Color, roof: Color) {
+    val h = width * heightFactor
+    drawGroundShadow(cx, bottomY, width, h)
+    val wheel = Color(0xFF15121C)
+    drawRect(wheel, Offset(cx - width * 0.54f, bottomY - h * 0.22f), Size(width * 0.16f, h * 0.22f))
+    drawRect(wheel, Offset(cx + width * 0.38f, bottomY - h * 0.22f), Size(width * 0.16f, h * 0.22f))
+    drawRoundRect(body, Offset(cx - width / 2f, bottomY - h * 0.66f), Size(width, h * 0.6f), CornerRadius(width * 0.1f))
+    drawRoundRect(roof, Offset(cx - width * 0.37f, bottomY - h), Size(width * 0.74f, h * 0.42f), CornerRadius(width * 0.1f))
+    val tail = Color(0xFFFF3B3B)
+    drawRect(tail, Offset(cx - width * 0.44f, bottomY - h * 0.5f), Size(width * 0.2f, h * 0.1f))
+    drawRect(tail, Offset(cx + width * 0.24f, bottomY - h * 0.5f), Size(width * 0.2f, h * 0.1f))
+}

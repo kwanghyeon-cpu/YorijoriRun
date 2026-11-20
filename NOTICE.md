@@ -2,7 +2,7 @@
 
 ## Tabler Icons — app icon artwork
 
-The car glyph in the Path Dash app icon is "car-suv" from Tabler Icons
+The car glyph in the 요리조리 런 app icon is "car-suv" from Tabler Icons
 (https://tabler.io/icons), used under the MIT License.
 
 MIT License

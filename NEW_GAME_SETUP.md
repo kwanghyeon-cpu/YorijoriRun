@@ -1,27 +1,29 @@
-# Path Dash — 새 게임 준비 체크리스트
+# 요리조리 런 — 새 게임 준비 체크리스트
 
 Lane Dash(하이웨이 3.0.5)를 복제해서 만든 새 프로젝트입니다. 게임 엔진·조작·난이도·광고/순위표 구조는 그대로이고,
-이름과 계정 연결만 분리해 둔 상태입니다. "Path Dash"는 **임시 이름**입니다.
+이름과 계정 연결만 분리해 둔 상태입니다.
 
-## 이름 바꾸기 (출시 전, 한 번에)
-패키지명은 스토어에 올린 뒤에는 바꿀 수 없습니다. 이름이 정해지면 아래 한 줄로 패키지·클래스·표시 이름·저장 키를 모두 바꿉니다.
+## 이름 (2026-11-20 확정)
+이름은 **요리조리 런**(코드 이름 `YorijoriRun`, 패키지 `com.khcompany.yorijorirun`)으로 정했습니다.
+Path Dash는 임시 이름이었고, 프로젝트 폴더 이름(`D:\Dev\PathDash`)만 그대로입니다.
+패키지명은 스토어에 올린 뒤에는 바꿀 수 없습니다. 올리기 전에 이름을 또 바꾼다면 아래 한 줄이면 됩니다.
 
 ```
-node tools/rename-project.cjs PathDash 새이름 "Path Dash" "새 이름"
+node tools/rename-project.cjs YorijoriRun 새이름 "요리조리 런" "새 이름"
 ```
 
 ## 이미 분리해 둔 것
-- **패키지**: `com.khcompany.pathdash` (Lane Dash와 별개의 앱)
+- **패키지**: `com.khcompany.yorijorirun` (Lane Dash와 별개의 앱)
 - **버전**: 0.1.0 (versionCode 1)
 - **광고**: Lane Dash의 실제 AdMob ID를 지우고 Google 샘플 ID로 바꿔 둠 (`AndroidManifest.xml`, `ads/AdManager.kt`)
-- **순위표**: 컬렉션을 `scores_pathdash`로 분리 (앱·웹), `firestore.rules`도 이 컬렉션만 열도록 정리
-- **웹 저장 키**: `path_dash_*` (같은 github.io 도메인에서 Lane Dash 기록과 섞이지 않음)
+- **순위표**: 컬렉션을 `scores_yorijorirun`로 분리 (앱·웹), `firestore.rules`도 이 컬렉션만 열도록 정리
+- **웹 저장 키**: `yorijori_run_*` (같은 github.io 도메인에서 Lane Dash 기록과 섞이지 않음)
 
 ## 직접 해 주셔야 하는 것 (계정 작업)
-1. **Firebase**: 프로젝트 콘솔에서 Android 앱 `com.khcompany.pathdash`를 등록하고 `google-services.json`을 받아 `app/`에 넣기.
+1. **Firebase**: 프로젝트 콘솔에서 Android 앱 `com.khcompany.yorijorirun`를 등록하고 `google-services.json`을 받아 `app/`에 넣기.
    지금 `app/google-services.json`은 빌드만 되게 만든 **임시 파일**입니다(로컬 전용, 커밋 안 됨).
    같은 Firebase 프로젝트(lanedash-2cc5d)를 쓰셔도 되고 새 프로젝트를 만드셔도 됩니다.
-2. **Firestore 규칙**: `firestore.rules`의 `scores_pathdash` 블록을 콘솔 규칙에 추가해 게시하기.
+2. **Firestore 규칙**: `firestore.rules`의 `scores_yorijorirun` 블록을 콘솔 규칙에 추가해 게시하기.
    같은 Firebase 프로젝트를 쓰신다면 Lane Dash의 기존 블록(`scores`, `scores_highway`)은 **지우지 말고 함께 두세요.**
    게시 전까지는 이 게임의 순위표가 "권한 없음"으로 실패합니다(의도된 안전장치).
 3. **AdMob**: 새 앱 등록 → 앱 ID(`~`)와 전면·보상형 광고 단위 ID(`/`)를 받아서 위 두 파일의 샘플 ID 교체.
@@ -30,7 +32,7 @@ node tools/rename-project.cjs PathDash 새이름 "Path Dash" "새 이름"
    개인 개발자 계정은 새 앱마다 비공개 테스트 요건이 있을 수 있으니 콘솔에서 확인.
 5. **서명**: 릴리스 서명은 `keystore.properties`(커밋 안 됨)로 합니다. Lane Dash의 업로드 키를 재사용해도 되고 새로 만들어도 됩니다.
 6. **GitHub / 웹**: 새 저장소를 만들어 푸시하고 Pages를 켜면 공유 링크(`WEB_PLAY_URL`)가 살아납니다.
-   지금은 `https://kwanghyeon-cpu.github.io/PathDash/web/`로 가정해 두었습니다.
+   지금은 `https://kwanghyeon-cpu.github.io/YorijoriRun/web/`로 가정해 두었습니다.
 
 ## 교체할 그림·소리
 

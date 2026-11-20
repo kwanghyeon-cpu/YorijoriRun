@@ -1,5 +1,5 @@
 // Global Firestore leaderboard — mirrors app/src/main/java/.../game/FirestoreLeaderboardRepository.kt
-// and Leaderboard.kt (same "scores_pathdash" collection, same field names, same qualifying rule),
+// and Leaderboard.kt (same "scores_yorijorirun" collection, same field names, same qualifying rule),
 // so a score set from the web build lands in the same shared leaderboard as the Android app.
 //
 // This needs a Web app registered in the same Firebase project (lanedash-2cc5d) — the
@@ -17,7 +17,7 @@ const FIREBASE_CONFIG = {
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const leaderboardDb = firebase.firestore();
-const SCORES_COLLECTION = 'scores_pathdash';
+const SCORES_COLLECTION = 'scores_yorijorirun';
 
 async function fetchTopScores(limit = 10) {
   const snapshot = await leaderboardDb.collection(SCORES_COLLECTION)

@@ -17,8 +17,8 @@ const SFX_CUES = {
   SHIELD_HIT: { base: 'CRASH', rate: 1.5, volume: 0.6 },
 };
 
-const BGM_VOLUME_KEY = 'path_dash_bgm_volume';
-const SFX_VOLUME_KEY = 'path_dash_sfx_volume';
+const BGM_VOLUME_KEY = 'yorijori_run_bgm_volume';
+const SFX_VOLUME_KEY = 'yorijori_run_sfx_volume';
 
 function loadVolume(key, fallback) {
   const raw = localStorage.getItem(key);

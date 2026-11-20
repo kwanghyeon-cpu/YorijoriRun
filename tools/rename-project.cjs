@@ -27,6 +27,8 @@ const pairs = [
   [upperWords(fromName).replace(' ', '\\n'), upperWords(toName).replace(' ', '\\n')],
   [upperWords(fromName).replace(' ', '<br/>'), upperWords(toName).replace(' ', '<br/>')],
   [snake(fromId), snake(toId)],
+  // Any other lower-case use: the leaderboard collection (scores_pathdash), temp folder names.
+  [lower(fromId), lower(toId)],
 ];
 
 const TEXT = /\.(kt|kts|xml|md|js|mjs|cjs|html|css|json|rules|properties|toml)$/;

@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PathDash">
+        android:theme="@style/Theme.YorijoriRun">
         <!-- Google's sample AdMob App ID until this game is registered in AdMob (TODO, see
              NEW_GAME_SETUP.md). Never reuse Lane Dash's IDs: each app needs its own. -->
         <meta-data
@@ -21,7 +21,7 @@
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
-            android:theme="@style/Theme.PathDash">
+            android:theme="@style/Theme.YorijoriRun">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
