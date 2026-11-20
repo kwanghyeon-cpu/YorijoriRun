@@ -25,9 +25,11 @@ Lane Dash 3.0.5(`C:\Users\innocean\AndroidStudioProjects\LaneDash`, 별도로 �
 - 난이도 측정: `node tools/difficulty-planner.mjs` (앞을 내다보는 봇으로 생존 시간 측정)
 - 스토어 스크린샷 생성: `node tools/store-screenshots/serve.mjs` 후 `http://127.0.0.1:8145/shots.html?save=1`
 - 배경 가공: `design/city-backdrops/make-backdrops.cjs`, 제미나이 프롬프트 예시 `design/city-backdrops/gemini-prompts.md`
+- 탈것·장애물 그림 가공: `node design/sprites/make-sprites.cjs` (`--dry`는 임시 폴더에만 저장), 프롬프트 `design/sprites/gemini-prompts.md`. 원본은 `design/sprites/gemini-originals/`(커밋 안 함)
 
 ## 진행 상황
 
 - 남은 계정 작업과 교체할 그림 목록은 `NEW_GAME_SETUP.md`.
 - 그림(탈것 4종 뒷모습, 새 장애물, 타이틀, 아이콘)은 아직 Lane Dash 것을 임시로 사용 중.
 - GitHub 원격 저장소 없음(로컬 git만).
+- 작업마다 새 `feature/...` 브랜치에서 한다. 커밋과 master 합치기(fast-forward)는 요청이 있을 때만.

@@ -36,8 +36,12 @@ node tools/rename-project.cjs PathDash 새이름 "Path Dash" "새 이름"
 | 파일 | 새 내용 |
 |---|---|
 | `car_rear_1..4.png` (앱 `drawable-nodpi`, 웹 `assets/rear`) | 조깅·자전거·리어카·킥보드 (뒷모습, 순서대로 1~4) |
-| `traffic_rear_*.png` (움직이는 장애물 4칸, 같은 방향으로 가는 뒷모습) | 자전거·강아지 산책·배달 오토바이·러닝 크루 |
-| `hw_cone.png`, `hw_barrier.png` (멈춰 있는 장애물 2칸) | 후보: 벤치·포트홀·라바콘·공사 울타리 (2칸에 넣을 2개를 고르거나 칸을 늘림) |
+| `traffic_rear_*.png` (움직이는 장애물 4칸, 같은 방향으로 가는 뒷모습) | sedan 자전거 탄 사람·suv 강아지 산책·bus 러닝 크루·truck 배달 오토바이 |
+| `hw_barrier.png`, `hw_cone.png` (멈춰 있는 장애물 2칸) | 포트홀, 라바콘(지금 그림 그대로 써도 됨) |
+
+그림 10장의 제미나이 프롬프트는 `design/sprites/gemini-prompts.md`에 있습니다. 받은 그림을
+`design/sprites/gemini-originals/`에 같은 파일 이름으로 넣고 `node design/sprites/make-sprites.cjs`를 실행하면
+배경을 지우고 폭을 맞춰 앱·웹에 함께 넣습니다. 그림을 넣은 뒤에는 종류별 화면 폭(`TRAFFIC_KINDS`의 `halfWidth`)을 다시 맞춥니다.
 | `city_*.png` | 그대로 써도 됨 (길 건너편 도시) |
 | `home_portrait.png`, 앱 아이콘 | 새 타이틀 화면, 새 아이콘 |
 | 효과음 (`res/raw`, `web/assets`) | 발소리·자전거 벨 등 |
