@@ -30,13 +30,15 @@ for (const [what, file] of Object.entries(need)) {
 }
 if (!fs.existsSync(shotsDir)) throw new Error(`스크린샷 폴더가 없어요: ${shotsDir}`);
 
-// A stale bundle is the easy mistake: refuse one older than the newest source change in app/src.
-const newest = (dir) => fs.readdirSync(dir, { withFileTypes: true }).reduce((m, e) => {
-  const p = path.join(dir, e.name);
-  return Math.max(m, e.isDirectory() ? newest(p) : fs.statSync(p).mtimeMs);
-}, 0);
-if (fs.statSync(need.aab).mtimeMs < newest(path.join(ROOT, 'app/src/main'))) {
-  throw new Error('app-release.aab가 앱 소스보다 오래됐어요. ./gradlew.bat :app:bundleRelease 를 먼저 다시 실행하세요.');
+// A stale bundle is the easy mistake. File times can't tell (switching branches touches every file), so
+// ask git: the app must have no uncommitted changes, and the bundle must be newer than its last commit.
+const git = (...a) => execFileSync('git', a, { cwd: ROOT }).toString().trim();
+if (git('status', '--porcelain', '--', 'app') !== '') {
+  throw new Error('app/에 커밋하지 않은 변경이 있어요. 커밋한 뒤 ./gradlew.bat :app:bundleRelease 를 다시 실행하세요.');
+}
+const lastAppCommit = Number(git('log', '-1', '--format=%ct', '--', 'app')) * 1000;
+if (fs.statSync(need.aab).mtimeMs < lastAppCommit) {
+  throw new Error('app-release.aab가 앱의 마지막 커밋보다 오래됐어요. ./gradlew.bat :app:bundleRelease 를 먼저 다시 실행하세요.');
 }
 
 fs.rmSync(out, { recursive: true, force: true });
