@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- The activity is locked to portrait (sensorPortrait), which makes Play assume a portrait screen is
+         required and hide the app from landscape-only devices (Chromebooks, some tablets, Play Games on PC).
+         Portrait is preferred, not required: those devices letterbox the portrait game. -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -11,8 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.YorijoriRun">
-        <!-- Google's sample AdMob App ID until this game is registered in AdMob (TODO, see
-             NEW_GAME_SETUP.md). Never reuse Lane Dash's IDs: each app needs its own. -->
+        <!-- This game's own AdMob App ID. Never reuse Lane Dash's IDs: each app needs its own. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4172722948933624~3343896247" />
