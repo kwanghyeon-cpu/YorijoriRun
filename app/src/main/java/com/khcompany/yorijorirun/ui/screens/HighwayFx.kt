@@ -10,10 +10,7 @@ import com.khcompany.yorijorirun.game.highway.HW_DRAW_DISTANCE
 import com.khcompany.yorijorirun.game.highway.RoadStrips
 import com.khcompany.yorijorirun.game.highway.roadHalfWidth
 import com.khcompany.yorijorirun.game.highway.tForDz
-import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.hypot
-import kotlin.math.sin
 
 // Speed-feel effects for the behind-the-car mode. Everything is cheap on purpose: a few dozen
 // rectangles in batched paths and a handful of lines per frame, driven only by engine state.
@@ -83,32 +80,3 @@ internal fun DrawScope.drawRoadside(
     drawPath(batch.lamps, lampColor)
 }
 
-private const val SPEED_LINE_COUNT = 14
-
-/**
- * Streaks that rush outward from near the vanishing point, only once you are well past cruising
- * speed ([speedRatio] 0..1 of the top speed), so the top end feels different from the start.
- */
-internal fun DrawScope.drawSpeedLines(speedRatio: Float, elapsedSeconds: Float, focalY: Float) {
-    val strength = ((speedRatio - 0.6f) / 0.4f).coerceIn(0f, 1f)
-    if (strength <= 0.02f) return
-    val cx = size.width / 2f
-    val maxR = hypot(cx, size.height - focalY)
-    val stroke = maxOf(2f, size.width * 0.0035f)
-    for (i in 0 until SPEED_LINE_COUNT) {
-        val phase = (elapsedSeconds * 1.9f + i * 0.371f) % 1f
-        // Spread over the left and right sides, fanning out a little above and below horizontal.
-        val side = if (i % 2 == 0) 1f else -1f
-        val spread = (((i * 53) % 100) / 100f - 0.5f) * 1.7f // ~ -49..49 degrees in radians
-        val dirX = side * cos(spread)
-        val dirY = sin(spread)
-        val r0 = maxR * (0.28f + 0.62f * phase)
-        val r1 = r0 + maxR * (0.04f + 0.14f * phase)
-        drawLine(
-            color = Color.White.copy(alpha = strength * 0.42f * phase),
-            start = Offset(cx + dirX * r0, focalY + dirY * r0),
-            end = Offset(cx + dirX * r1, focalY + dirY * r1),
-            strokeWidth = stroke * (0.6f + phase),
-        )
-    }
-}

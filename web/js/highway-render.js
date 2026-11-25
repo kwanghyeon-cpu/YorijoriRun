@@ -2,7 +2,9 @@
 // HighwayFx.kt. Needs highway-engine.js and art.js (drawCitySkylineSprite, drawRoadHaze,
 // drawGroundShadow, hexA, updateFxQuality / fxState) to be loaded first.
 
-const HW_STRIPE_LENGTH = 1;
+// Long enough that the light/dark bands pass slowly: a full light+dark cycle is twice this, so at the
+// 25..31 units/s cruise they pass about 4-5 times a second (with 1 it was 13-15, a tiring flicker).
+const HW_STRIPE_LENGTH = 3;
 
 // The path has no lane markings (a walking path, not a road); the five lanes are only in the game
 // logic. The light/dark bands across the path still show the speed.
@@ -19,6 +21,14 @@ const HW_VIGNETTE_MAX_ALPHA = 0.5;
 const HW_ITEM_RADIUS = 0.17;
 
 const hwStrips = new RoadStrips();
+
+/** Like mixHex, but returns #RRGGBB so the result can be mixed again. */
+function mixHexToHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const ch = (shift) => Math.round(((pa >> shift) & 255) * (1 - t) + ((pb >> shift) & 255) * t);
+  return '#' + [16, 8, 0].map((shift) => ch(shift).toString(16).padStart(2, '0')).join('');
+}
 
 /** Blends two #RRGGBB colors; t = 0 gives a, t = 1 gives b. */
 function mixHex(a, b, t) {
@@ -77,36 +87,6 @@ function drawHighwayRoadside(ctx, w, h, cameraZ, horizonY, rowH, city) {
   ctx.fill(posts);
   ctx.fillStyle = '#FFE9A8';
   ctx.fill(lamps);
-}
-
-const HW_SPEED_LINE_COUNT = 14;
-
-/**
- * Streaks rushing outward from near the vanishing point, only once you are well past cruising
- * speed (speedRatio 0..1 of the top speed), so the top end feels different from the start.
- */
-function drawHighwaySpeedLines(ctx, w, h, speedRatio, elapsedSeconds, focalY) {
-  const strength = Math.min(1, Math.max(0, (speedRatio - 0.6) / 0.4));
-  if (strength <= 0.02) return;
-  const cx = w / 2;
-  const maxR = Math.hypot(cx, h - focalY);
-  const stroke = Math.max(2, w * 0.0035);
-  ctx.lineCap = 'butt';
-  for (let i = 0; i < HW_SPEED_LINE_COUNT; i++) {
-    const phase = (elapsedSeconds * 1.9 + i * 0.371) % 1;
-    const side = i % 2 === 0 ? 1 : -1;
-    const spread = (((i * 53) % 100) / 100 - 0.5) * 1.7; // ~ -49..49 degrees in radians
-    const dirX = side * Math.cos(spread);
-    const dirY = Math.sin(spread);
-    const r0 = maxR * (0.28 + 0.62 * phase);
-    const r1 = r0 + maxR * (0.04 + 0.14 * phase);
-    ctx.strokeStyle = `rgba(255,255,255,${(strength * 0.42 * phase).toFixed(3)})`;
-    ctx.lineWidth = stroke * (0.6 + phase);
-    ctx.beginPath();
-    ctx.moveTo(cx + dirX * r0, focalY + dirY * r0);
-    ctx.lineTo(cx + dirX * r1, focalY + dirY * r1);
-    ctx.stroke();
-  }
 }
 
 // Procedural "alive" motion so riders bob and sway instead of sliding like paper cut-outs. Drawing
@@ -221,10 +201,10 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
   const speedRatio = Math.min(1, Math.max(0, engine.speed / HW.MAX_SPEED));
   const fancy = !fxState.low;
 
-  // Road vibration: grows with speed. The slight zoom
-  // keeps the shifted frame from showing an empty edge.
-  const amplitude = h * 0.0009 * speedRatio * speedRatio;
-  const shakeY = (Math.sin(engine.z * 1.7) * 0.6 + Math.sin(engine.z * 4.1) * 0.4) * amplitude;
+  // Road sway: a slow, small rise and fall (about twice a second at cruise). A fast jitter of the whole
+  // picture tires the eyes. The slight zoom keeps the shifted frame from showing an empty edge.
+  const amplitude = h * 0.0004 * speedRatio * speedRatio;
+  const shakeY = Math.sin(engine.z * 0.45) * amplitude;
   ctx.save();
   ctx.translate(w / 2, h / 2 + shakeY);
   ctx.scale(HW_SHAKE_ZOOM, HW_SHAKE_ZOOM);
@@ -241,7 +221,11 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     ctx.fillRect(0, 0, w, horizonY);
   }
 
-  ctx.fillStyle = mixHex(HW_GRASS, city.haze, 0.2);
+  // The bands blend toward their average color if they would ever pass fast enough to flicker.
+  const bandBlur = patternBlur(engine.speed, HW_STRIPE_LENGTH * 2) * 0.5;
+  const grassLight = mixHexToHex(HW_GRASS, city.haze, 0.2);
+  const grassDark = mixHexToHex(HW_GRASS_DARK, city.haze, 0.2);
+  ctx.fillStyle = mixHex(grassLight, grassDark, bandBlur);
   ctx.fillRect(0, horizonY, w, roadH);
 
   const darkGrass = new Path2D();
@@ -262,22 +246,20 @@ function drawHighwayFrame(ctx, w, h, engine, city, car, images) {
     rumblePath.rect(cx + hw, top, rumble, height);
     (odd ? roadDark : roadLight).rect(cx - hw, top, hw * 2, height);
   }
-  ctx.fillStyle = mixHex(HW_GRASS_DARK, city.haze, 0.2);
+  ctx.fillStyle = mixHex(grassDark, grassLight, bandBlur);
   ctx.fill(darkGrass);
-  ctx.fillStyle = HW_CURB_SHADE;
+  ctx.fillStyle = mixHex(HW_CURB_SHADE, HW_CURB_LIGHT, bandBlur);
   ctx.fill(rumbleRed);
-  ctx.fillStyle = HW_CURB_LIGHT;
+  ctx.fillStyle = mixHex(HW_CURB_LIGHT, HW_CURB_SHADE, bandBlur);
   ctx.fill(rumbleWhite);
-  ctx.fillStyle = mixHex(city.roadColor, '#FFFFFF', 0.10);
+  ctx.fillStyle = mixHex(city.roadColor, '#FFFFFF', 0.10 - 0.05 * bandBlur);
   ctx.fill(roadLight);
-  ctx.fillStyle = mixHex(city.roadColor, '#FFFFFF', 0.05);
+  ctx.fillStyle = mixHex(city.roadColor, '#FFFFFF', 0.05 + 0.05 * bandBlur);
   ctx.fill(roadDark);
 
   drawHighwayRoadside(ctx, w, h, engine.z, horizonY, rowH, city);
-  if (fancy) {
-    drawRoadHaze(ctx, city, w, horizonY, roadH);
-    drawHighwaySpeedLines(ctx, w, h, speedRatio, engine.elapsedSeconds, horizonY + roadH * 0.2);
-  }
+  // No speed-line streaks: at the steady path speed they would fly past the edge of view all run.
+  if (fancy) drawRoadHaze(ctx, city, w, horizonY, roadH);
 
   // Pickups, far to near; they hover just above the road with a small shadow.
   const itemsFarToNear = engine.items.slice().sort((a, b) => b.z - a.z);

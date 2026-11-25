@@ -14,13 +14,13 @@ function loadApi() {
   const src = fs.readFileSync(path.join(jsDir, 'highway-engine.js'), 'utf8');
   const ctx = vm.createContext({ Math, console });
   vm.runInContext(
-    src + '\n;globalThis.__api = { HighwayEngine, RoadStrips, HW, TRAFFIC_KINDS, HW_PLAYER_DZ, HW_LANE_CENTERS, HW_LANE_SPACING, HW_HORIZON_FRACTION, curveAt, requiredGapSeconds, skylineScroll, tForDz, dzForT, roadHalfWidth, fadeForDz, HW_PLAYER_T, HW_DRAW_DISTANCE, HW_FADE_DISTANCE };',
+    src + '\n;globalThis.__api = { HighwayEngine, RoadStrips, HW, TRAFFIC_KINDS, HW_PLAYER_DZ, HW_LANE_CENTERS, HW_LANE_SPACING, HW_HORIZON_FRACTION, curveAt, requiredGapSeconds, skylineScroll, tForDz, dzForT, roadHalfWidth, fadeForDz, patternBlur, HW_BLUR_START_HZ, HW_PLAYER_T, HW_DRAW_DISTANCE, HW_FADE_DISTANCE };',
     ctx,
   );
   return ctx.__api;
 }
 
-const { HighwayEngine, RoadStrips, HW, TRAFFIC_KINDS, HW_PLAYER_DZ, HW_LANE_CENTERS, HW_LANE_SPACING, HW_HORIZON_FRACTION, curveAt, requiredGapSeconds, skylineScroll, tForDz, dzForT, roadHalfWidth, fadeForDz, HW_PLAYER_T, HW_DRAW_DISTANCE, HW_FADE_DISTANCE } = loadApi();
+const { HighwayEngine, RoadStrips, HW, TRAFFIC_KINDS, HW_PLAYER_DZ, HW_LANE_CENTERS, HW_LANE_SPACING, HW_HORIZON_FRACTION, curveAt, requiredGapSeconds, skylineScroll, tForDz, dzForT, roadHalfWidth, fadeForDz, patternBlur, HW_BLUR_START_HZ, HW_PLAYER_T, HW_DRAW_DISTANCE, HW_FADE_DISTANCE } = loadApi();
 
 /** Small seeded PRNG so every run is reproducible. */
 function mulberry32(seed) {
@@ -126,6 +126,18 @@ test('an approaching car moves smoothly down the screen', () => {
     dz -= 24 / 60;
   }
   assert.ok(worst < 0.07, 'worst frame moves a car ' + worst + ' of the road height');
+});
+
+test('road patterns blend only when they would flicker', () => {
+  assert.equal(patternBlur(5 * 6, 6), 0); // 5 Hz: crisp
+  assert.equal(patternBlur(12 * 6, 6), 1); // 12 Hz: fully blended
+  const mid = patternBlur(8.5 * 6, 6);
+  assert.ok(mid > 0.4 && mid < 0.6);
+  // The renderer's light+dark band cycle is 6 units (HW_STRIPE_LENGTH 3): even the fastest ride's steady
+  // speed keeps the bands under the flicker range, so they stay crisp all run.
+  const e = new HighwayEngine(() => {}, mulberry32(1));
+  e.start('bicycle');
+  assert.ok(e.speed / 6 < HW_BLUR_START_HZ, 'bands pass ' + e.speed / 6 + ' times a second');
 });
 
 test('things fade in over the last stretch before the draw distance', () => {

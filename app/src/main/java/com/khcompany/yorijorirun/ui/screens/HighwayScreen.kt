@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import com.khcompany.yorijorirun.ui.components.WATER_ITEM_COLOR
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -80,6 +81,7 @@ import com.khcompany.yorijorirun.game.highway.HW_DRAW_DISTANCE
 import com.khcompany.yorijorirun.game.highway.HW_HORIZON_FRACTION
 import com.khcompany.yorijorirun.game.highway.HW_PLAYER_T
 import com.khcompany.yorijorirun.game.highway.fadeForDz
+import com.khcompany.yorijorirun.game.highway.patternBlur
 import com.khcompany.yorijorirun.game.highway.roadHalfWidth
 import com.khcompany.yorijorirun.game.highway.tForDz
 import com.khcompany.yorijorirun.game.highway.HighwayEngine
@@ -92,12 +94,15 @@ import com.khcompany.yorijorirun.ui.components.SpriteCache
 import com.khcompany.yorijorirun.ui.components.drawCitySkylineSprite
 import com.khcompany.yorijorirun.ui.components.drawGroundShadow
 import com.khcompany.yorijorirun.ui.components.drawRoadHaze
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-private const val STRIPE_LENGTH = 1f
+// Long enough that the light/dark bands pass slowly: a full light+dark cycle is twice this, so at the
+// 25..31 units/s cruise they pass about 4-5 times a second (with 1 it was 13-15, a tiring flicker).
+private const val STRIPE_LENGTH = 3f
 
 /** Speedometer scale: world units per second to the KM/H shown in the HUD. */
 // Path speeds, not car speeds: the steady 28-unit cruise reads as about 21 km/h (25..31 units by ride).
@@ -224,14 +229,15 @@ fun HighwayScreen(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                // Road vibration: grows with speed, and the grass shakes the car much harder. The
-                // slight zoom keeps the shifted frame from showing an empty edge.
+                // Road sway: a slow, small rise and fall (about twice a second at cruise). A fast jitter of
+                // the whole picture tires the eyes. The slight zoom keeps the shifted frame from showing an
+                // empty edge.
                 .graphicsLayer {
                     val speedRatio = (engine.speed / HighwayEngine.MAX_SPEED).coerceIn(0f, 1f)
-                    val amplitude = size.height * 0.0009f * speedRatio * speedRatio
+                    val amplitude = size.height * 0.0004f * speedRatio * speedRatio
                     scaleX = SHAKE_ZOOM
                     scaleY = SHAKE_ZOOM
-                    translationY = (sin(engine.z * 1.7f) * 0.6f + sin(engine.z * 4.1f) * 0.4f) * amplitude
+                    translationY = sin(engine.z * 0.45f) * amplitude
                 },
         ) {
             if (!ready) {
@@ -259,7 +265,9 @@ fun HighwayScreen(
 
             val grassLight = lerp(ROAD_GRASS, city.haze, 0.2f)
             val grassDark = lerp(Color(0xFF276B2A), city.haze, 0.2f)
-            drawRect(grassLight, Offset(0f, horizonY), Size(w, roadH))
+            // The bands blend toward their average color if they would ever pass fast enough to flicker.
+            val bandBlur = patternBlur(engine.speed, STRIPE_LENGTH * 2f) * 0.5f
+            drawRect(lerp(grassLight, grassDark, bandBlur), Offset(0f, horizonY), Size(w, roadH))
 
             darkGrass.reset(); roadLight.reset(); roadDark.reset()
             rumbleRed.reset(); rumbleWhite.reset()
@@ -276,11 +284,11 @@ fun HighwayScreen(
                 rumblePath.addRect(Rect(cx + hw, top, cx + hw + rumble, bottom))
                 (if (odd) roadDark else roadLight).addRect(Rect(cx - hw, top, cx + hw, bottom))
             }
-            drawPath(darkGrass, grassDark)
-            drawPath(rumbleRed, CURB_SHADE)
-            drawPath(rumbleWhite, CURB_LIGHT)
-            drawPath(roadLight, lerp(city.roadColor, Color.White, 0.10f))
-            drawPath(roadDark, lerp(city.roadColor, Color.White, 0.05f))
+            drawPath(darkGrass, lerp(grassDark, grassLight, bandBlur))
+            drawPath(rumbleRed, lerp(CURB_SHADE, CURB_LIGHT, bandBlur))
+            drawPath(rumbleWhite, lerp(CURB_LIGHT, CURB_SHADE, bandBlur))
+            drawPath(roadLight, lerp(city.roadColor, Color.White, 0.10f - 0.05f * bandBlur))
+            drawPath(roadDark, lerp(city.roadColor, Color.White, 0.05f + 0.05f * bandBlur))
             drawRoadside(
                 batch = roadside,
                 strips = strips,
@@ -291,12 +299,8 @@ fun HighwayScreen(
                 lampColor = Color(0xFFFFE9A8),
                 bushColor = lerp(Color(0xFF1F5E27), city.haze, 0.2f),
             )
+            // No speed-line streaks: at the steady path speed they would fly past the edge of view all run.
             drawRoadHaze(city, horizonY)
-            drawSpeedLines(
-                speedRatio = engine.speed / HighwayEngine.MAX_SPEED,
-                elapsedSeconds = engine.elapsedSeconds,
-                focalY = horizonY + roadH * 0.2f,
-            )
 
             // Pickups, far to near; they hover just above the road with a small shadow.
             for (item in engine.items.sortedByDescending { it.z }) {
@@ -854,13 +858,21 @@ private fun DrawScope.drawRearSprite(
         translate(top = -air * height)
         scale(pose.scaleX, pose.scaleY, pivot = pivot)
     }) {
-        drawImage(
-            image = sprite,
-            srcSize = IntSize(sprite.width, sprite.height),
-            dstOffset = IntOffset((cx - width / 2f).roundToInt(), (bottomY - height).roundToInt()),
-            dstSize = IntSize(width.roundToInt(), height.roundToInt()),
-            filterQuality = FilterQuality.Medium,
-        )
+        // Whole-pixel destination plus a sub-pixel translate, so a slowly approaching walker glides
+        // instead of stepping one pixel at a time.
+        val left = cx - width / 2f
+        val top = bottomY - height
+        val ix = floor(left)
+        val iy = floor(top)
+        translate(left - ix, top - iy) {
+            drawImage(
+                image = sprite,
+                srcSize = IntSize(sprite.width, sprite.height),
+                dstOffset = IntOffset(ix.toInt(), iy.toInt()),
+                dstSize = IntSize(width.roundToInt(), height.roundToInt()),
+                filterQuality = FilterQuality.Medium,
+            )
+        }
     }
 }
 

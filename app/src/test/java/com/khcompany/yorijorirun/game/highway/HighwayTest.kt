@@ -86,6 +86,17 @@ class HighwayRoadTest {
     }
 
     @Test
+    fun roadPatternsBlendOnlyWhenTheyWouldFlicker() {
+        assertEquals(0f, patternBlur(speed = 5f * 6f, wavelength = 6f), 0f) // 5 Hz: crisp
+        assertEquals(1f, patternBlur(speed = 12f * 6f, wavelength = 6f), 0f) // 12 Hz: fully blended
+        assertTrue(patternBlur(speed = 8.5f * 6f, wavelength = 6f) in 0.4f..0.6f)
+        // The renderer's light+dark band cycle is 6 units (STRIPE_LENGTH 3): even the fastest ride's steady
+        // speed keeps the bands under the flicker range, so they stay crisp all run.
+        val fastest = HighwayEngine(random = Random(1)).also { it.start("bicycle") }.speed
+        assertTrue("bands pass " + fastest / 6f + " times a second", fastest / 6f < HW_BLUR_START_HZ)
+    }
+
+    @Test
     fun centerXAt_interpolatesBetweenStrips() {
         val s = strips(cameraZ = 130f)
         val rowH = 12f
