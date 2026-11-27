@@ -31,6 +31,9 @@ const ICONS = [
   ['PLAY', 'play', 'play-fill'],
   ['RETRY', 'retry', 'arrow-clockwise-fill'],
   ['PLAY_CIRCLE', 'playCircle', 'play-circle-fill'],
+  // Related apps: a card row opens another app or its store page; the game-over link to the sibling racing game.
+  ['OPEN_EXTERNAL', 'openExternal', 'arrow-square-out-fill'],
+  ['FLAG_CHECKERED', 'flagCheckered', 'flag-checkered-fill'],
 ];
 
 const VIEWBOX = 256;

@@ -517,6 +517,7 @@ fun HighwayScreen(
         }
 
         if (engine.status == GameStatus.GAME_OVER) {
+            val relatedApps = rememberRelatedApps()
             HighwayDialog(title = "GAME OVER") {
                 Text(
                     text = if (engine.gameOverReason == GameOverReason.FUEL_EMPTY) "체력 소진" else "부딪혔어요",
@@ -599,6 +600,8 @@ fun HighwayScreen(
                 ) {
                     ButtonLabel(GameIcon.HOME, "HOME", MaterialTheme.colorScheme.onBackground)
                 }
+                // One quiet line to the sibling racing game (no popup, no reward).
+                RelatedGameLink(apps = relatedApps, modifier = Modifier.padding(top = 4.dp))
             }
         }
     }

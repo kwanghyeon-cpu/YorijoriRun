@@ -358,6 +358,7 @@ function showGameOver() {
   submitBtn.textContent = '등록하기';
 
   document.getElementById('gameover-overlay').classList.remove('hidden');
+  renderRelatedGameLink(document.getElementById('gameover-related'));
 
   const score = engine.score;
   // Same rule as qualifiesForTop in leaderboard.js, but keeping the list lets us also say
@@ -474,6 +475,7 @@ function goHome() {
 // ---------- LEADERBOARD ----------
 function showLeaderboardScreen(highlightName, highlightScore) {
   showScreen('screen-leaderboard');
+  renderRelatedAppsSection(document.getElementById('leaderboard-related'));
   const list = document.getElementById('leaderboard-list');
   list.innerHTML = '<div class="leaderboard-status">불러오는 중...</div>';
 

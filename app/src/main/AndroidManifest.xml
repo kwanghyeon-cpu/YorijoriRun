@@ -9,6 +9,12 @@
          Portrait is preferred, not required: those devices letterbox the portrait game. -->
     <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
 
+    <!-- Sibling apps from the shared related-apps list, so the "함께 쓰면 좋은 앱" card can open them when
+         installed (package visibility, Android 11+). Keep in step with the list's racing group. -->
+    <queries>
+        <package android:name="com.khcompany.lanedash" />
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

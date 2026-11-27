@@ -101,6 +101,9 @@ fun LeaderboardScreen(
             }
         }
 
+        // KH Company's sibling apps (Lane Dash for this game), below the scores.
+        RelatedAppsCard(apps = rememberRelatedApps(), modifier = Modifier.padding(top = 12.dp))
+
         Button(
             onClick = onHome,
             modifier = Modifier
